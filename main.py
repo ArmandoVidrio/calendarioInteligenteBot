@@ -10,3 +10,4 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 if __name__ == "main":
     bot.infinity_polling()
+    print("Bot en produccion!")
