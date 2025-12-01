@@ -1,0 +1,53 @@
+{
+  "name": "Telegram simple reply",
+  "nodes": [
+    {
+      "id": "Telegram Trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [300, 300],
+      "parameters": {
+        "updates": [
+          {
+            "update": "message"
+          }
+        ]
+      },
+      "credentials": {
+        "telegramApi": {
+          "token": "YOUR_TELEGRAM_BOT_TOKEN"
+        }
+      }
+    },
+    {
+      "id": "Send Message",
+      "name": "Send Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [600, 300],
+      "parameters": {
+        "chatId": "={{$json[\"message\"][\"chat\"][\"id\"]}}",
+        "text": "Aquí está tu link para iniciar sesión:\nhttps://tudominio.com/login"
+      },
+      "credentials": {
+        "telegramApi": {
+          "token": "YOUR_TELEGRAM_BOT_TOKEN"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

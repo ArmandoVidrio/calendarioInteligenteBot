@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  # -------------------------------
+  # OAUTH-SERVICE (Google OAuth)
+  # -------------------------------
+  oauth-service:
+    build:
+      context: ./services/oauth-service
+      dockerfile: Dockerfile
+    container_name: oauth-service
+    environment:
+      PORT: 3002
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: "http://localhost:4000/auth/google/callback"
+    ports:
+      - "4000:3002"
+    networks:
+      - automation-network
+    restart: unless-stopped
+
+  # -------------------------------
+  # N8N WORKFLOW AUTOMATION
+  # -------------------------------
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n_email
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=n8n123
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - NODE_ENV=production
+      - N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN=true
+      - N8N_PUSH_BACKEND=websocket
+      - N8N_METRICS=false
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/workflows
+    networks:
+      - automation-network
+    restart: unless-stopped
+
+  # -------------------------------
+  # NGROK (HTTPS tunnel para Telegram)
+  # -------------------------------
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    command: http n8n:5678
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTH_TOKEN}
+    depends_on:
+      - n8n
+    ports:
+      - "4040:4040"
+    networks:
+      - automation-network
+    restart: unless-stopped
+
+networks:
+  automation-network:
+    driver: bridge
+
+volumes:
+  n8n_data:
