@@ -14,7 +14,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       # REDIRECT_URI será la URL pública que ngrok asigne a este túnel
-      GOOGLE_REDIRECT_URI: "https://ontogenetical-jaylin-unwhirled.ngrok-free.dev/auth/callback"
+      GOOGLE_REDIRECT_URI: "https://equanimously-garreted-melva.ngrok-free.dev"
     ports:
       - "4000:3002"
     networks:
@@ -73,7 +73,7 @@ services:
     container_name: ngrok-oauth
     command: http oauth-service:3002
     environment:
-      - NGROK_AUTHTOKEN=${NGROK_AUTH_TOKEN}
+      - NGROK_AUTHTOKEN=${NGROK_AUTH_TOKEN_FOR_REDIRECT}
     depends_on:
       - oauth-service
     ports:

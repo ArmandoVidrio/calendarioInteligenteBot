@@ -12,7 +12,7 @@ app = FastAPI()
 
 # Load OAuth settings
 GOOGLE_CLIENT_SECRETS = "credentials.json"
-REDIRECT_URI = "https://ontogenetical-jaylin-unwhirled.ngrok-free.dev/auth/callback"
+REDIRECT_URI = "https://equanimously-garreted-melva.ngrok-free.dev"
 
 SCOPES = [
     "openid",
