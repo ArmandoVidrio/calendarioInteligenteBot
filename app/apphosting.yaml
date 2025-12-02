@@ -1,3 +1,28 @@
-runtime: nodejs20
-run:
-  command: "npm start"
+# Settings for Cloud Run (puedes tener más configuraciones aquí si las necesitas)
+runConfig:
+  minInstances: 0
+  maxInstances: 2 # Ejemplo, ajusta según tu necesidad
+
+# Environment variables and secrets
+env:
+  - variable: GOOGLE_CLIENT_ID
+    value: GOOGLE_CLIENT_ID
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: GOOGLE_CLIENT_SECRET
+    # Aquí es donde referenciamos el secreto de Secret Manager.
+    # Primero, debes crear el secreto en Cloud Secret Manager y poner el valor allí.
+    # El formato es `projects/TU_PROJECT_ID/secrets/NOMBRE_DEL_SECRETO`
+    # O simplemente `NOMBRE_DEL_SECRETO` si el secreto está en el mismo proyecto.
+    secret: CLIENT_SECRET_TELEGRAM_BOT
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: GOOGLE_REDIRECT_URI
+    value: https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/auth/google-calendar-callback
+    availability:
+      - BUILD
+      - RUNTIME
