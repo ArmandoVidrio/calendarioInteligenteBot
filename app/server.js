@@ -88,7 +88,7 @@ app.get('/auth/initiate-google-calendar-auth', async (req, res) => {
 
   } catch (error) {
     console.error('Error initiating Google Calendar auth:', error);
-    res.status(500).send('Failed to initiate Google Calendar authentication.');
+    res.status(500).send('Failed to initiate Google Calendar authentication. Error: ' + error.message);
   }
 });
 
