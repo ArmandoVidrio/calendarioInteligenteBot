@@ -2,11 +2,9 @@
 bot para organizar tu calendario en telegram
 
 ## Pasos para ejecutar
+
 ### Paso 1:
-- Crear un virtual environment con el comando `python -m venv venv`
+- Crear copia funcional del archivo `.env.example` -> `.env` con el comando: `cp .env.example .env`
 
-### Paso 2:
-- Instalar los requerimientos con el comando `pip install -r requirements.txt`
-
-### Paso 3:
-- Crear un archivo `.env` y colocar la apiKey (contactar con administradores)
+### Paso 1:
+- Levantar el cluster: `docker compose up -d`

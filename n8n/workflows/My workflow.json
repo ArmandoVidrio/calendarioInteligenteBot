@@ -1,0 +1,120 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        -32
+      ],
+      "id": "779b5e6a-5070-4859-8702-edd0b15f6fe8",
+      "name": "Telegram Trigger",
+      "webhookId": "d03751f7-9d80-4ba3-8024-8fa2c725f177",
+      "credentials": {
+        "telegramApi": {
+          "id": "qUrhXQ3pqLSBASGR",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=Aqui esta tu link para iniciar sesion en google: {{ $json[\"login_url\"] }}",
+        "replyMarkup": "=inlineKeyboard",
+        "forceReply": {},
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Iniciar sesión",
+                    "additionalFields": {
+                      "url": "={{ $json[\"login_url\"] }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "replyKeyboardOptions": {},
+        "replyKeyboardRemove": {},
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        -32
+      ],
+      "id": "0bbe056f-3fcc-4c1c-928c-c61c1f8b814e",
+      "name": "Send a text message",
+      "webhookId": "f987d3f8-3b0b-4f92-8a49-9037c579ec2c",
+      "credentials": {
+        "telegramApi": {
+          "id": "qUrhXQ3pqLSBASGR",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://oauth-service:3002/auth/login",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -608,
+        -32
+      ],
+      "id": "8bbf1668-8feb-498d-8591-29ba2d4324bb",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ca80975c-1a14-4375-b0c1-d6341ab64393",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c7e15c0e3a966daf138f1ece005733537458f62148beae099eacc69588596cd7"
+  },
+  "id": "TTIlAjgBdMQJLHZc",
+  "tags": []
+}
