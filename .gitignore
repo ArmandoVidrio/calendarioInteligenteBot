@@ -1,5 +1,2 @@
-venv/
 .env
 credentials.json
-.DS_Store
-n8n/.DS_Store
