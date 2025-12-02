@@ -46,6 +46,7 @@ def google_login():
 
 @app.get("/auth/callback")
 async def google_callback(request: Request):
+    print("Callback received")
     code = request.query_params.get("code")
 
     if not code:
