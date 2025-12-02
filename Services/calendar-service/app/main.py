@@ -76,29 +76,7 @@ def get_credentials_for_user(user_id: str) -> Optional[Credentials]:
     # data is the dict representation created by creds.to_json()
     return Credentials.from_authorized_user_info(data, SCOPES)
 
-# -----------------------------------------------------------------------------
-# Helpers: OAuth URL generation and exchange
-# -----------------------------------------------------------------------------
-def build_flow(state: Optional[str] = None) -> Flow:
-    """
-    Build a google_auth_oauthlib.flow.Flow instance with the redirect URI set.
-    """
-    if not os.path.exists(CREDENTIALS_FILE):
-        raise FileNotFoundError(f"credentials.json not found at {CREDENTIALS_FILE}")
-    flow = Flow.from_client_secrets_file(
-        client_secrets_file=CREDENTIALS_FILE,
-        scopes=SCOPES,
-        redirect_uri=REDIRECT_URI
-    )
-    flow.oauth2session.params["access_type"] = "offline"  # important to get refresh_token
-    flow.oauth2session.params["prompt"] = "consent"       # ensure refresh token is returned
-    if state:
-        flow.params = {"state": state}
-    return flow
 
-# -----------------------------------------------------------------------------
-# Routes
-# -----------------------------------------------------------------------------
 @app.get("/health")
 async def health():
     logger.info("Health check called")
