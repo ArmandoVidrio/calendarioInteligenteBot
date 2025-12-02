@@ -10,19 +10,14 @@ import cors from 'cors'; // Importa cors para manejar peticiones desde otros or�
 // Firebase App Hosting ya inicializa el SDK con las credenciales del proyecto
 // automáticamente. Si corres esto localmente, necesitarías un service account key.
 admin.initializeApp();
-const db = admin.firestore(); // Para almacenar los refresh_tokens
+const db = admin.firestore();
 
 const app = express();
 app.use(express.json());
-app.use(cors()); // Habilita CORS si n8n u otro cliente va a hacer peticiones directas
+app.use(cors());
 
-// --- Variables de Entorno y Configuración OAuth ---
-// Asegúrate de definir estas variables en tu App Hosting.
-// Por ejemplo, en tu firebase.json o en la consola de Firebase App Hosting.
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-// La URL de redirección debe ser la URL de tu App Hosting + la ruta de callback.
-// EJEMPLO: https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/auth/google-calendar-callback
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 
 // --- Configuración de OAuth2Client ---
