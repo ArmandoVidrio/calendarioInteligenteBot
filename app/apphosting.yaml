@@ -20,7 +20,6 @@ env:
       - RUNTIME # Solo necesario en tiempo de ejecución
 
   - variable: GOOGLE_REDIRECT_URI
-    # Esta URL no es secreta, pero es buena práctica tenerla como variable de entorno
     value: https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/auth/google-calendar-callback
     availability:
       - RUNTIME
