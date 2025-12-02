@@ -6,9 +6,9 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./app ./app
+COPY app/ ./
 
 EXPOSE 3002
 
 # Importa el archivo: app/main.py → módulo = app.main
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3002"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3002"]

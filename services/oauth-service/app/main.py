@@ -3,12 +3,16 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from google_auth_oauthlib.flow import Flow
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
 # Load OAuth settings
 GOOGLE_CLIENT_SECRETS = "credentials.json"
-REDIRECT_URI = "http://localhost:3002/auth/callback"
+REDIRECT_URI = "https://ontogenetical-jaylin-unwhirled.ngrok-free.dev"
 
 SCOPES = [
     "openid",
@@ -20,17 +24,22 @@ SCOPES = [
 ## Get URL to login in ago
 @app.get("/auth/login")
 def google_login():
+    # Crear flujo OAuth con tu credentials.json y redirect URI correcto
     flow = Flow.from_client_secrets_file(
         GOOGLE_CLIENT_SECRETS,
         scopes=SCOPES,
         redirect_uri=REDIRECT_URI
     )
     
+    # Genera la URL de autorización
     auth_url, state = flow.authorization_url(
-        access_type="offline",
-        include_granted_scopes="true",
-        prompt="consent"
+        access_type="offline",           # Para obtener refresh token
+        include_granted_scopes="true",   # Para no pedir permisos repetidos
+        prompt="consent"                 # Fuerza la pantalla de consentimiento
     )
+    
+    logger.info(f"Generated Google OAuth URL: {auth_url}")
+    logger.info(f"State parameter: {state}")
     
     return {"login_url": auth_url, "state": state}
 
