@@ -86,29 +86,9 @@ async def health():
 async def root():
     return {"message": "Calendar service running. Use /auth/google/url to start OAuth."}
 
-@app.get("/auth/google/url")
+@app.get("/create/event")
 async def get_auth_url(user_id: str):
-    """
-    Returns an authorization URL the user should open in the browser.
-    Query param: user_id (e.g. telegram_user_id) which will be put into `state`
-    """
-    logger.info(f"Generating auth URL for user_id={user_id}")
-    try:
-        flow = build_flow(state=str(user_id))
-        auth_url, state = flow.authorization_url(
-            access_type="offline",
-            include_granted_scopes="true",
-            prompt="consent"
-        )
-        # state returned here equals the value we passed (user_id)
-        logger.info(f"Auth URL generated for user {user_id} (state={state})")
-        return {"auth_url": auth_url, "state": state}
-    except FileNotFoundError as e:
-        logger.error(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
-    except Exception as e:
-        logger.error(f"Failed to create auth URL: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create auth URL")
+    return {"status": "ok"}
 
 @app.get("/auth/google/callback", response_class=HTMLResponse)
 async def auth_callback(request: Request):
