@@ -14,7 +14,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       # REDIRECT_URI será la URL pública que ngrok asigne a este túnel
-      GOOGLE_REDIRECT_URI: "https://equanimously-garreted-melva.ngrok-free.dev"
+      GOOGLE_REDIRECT_URI: ${NGROK_CALLBACK_URL}
     ports:
       - "4000:3002"
     networks:
