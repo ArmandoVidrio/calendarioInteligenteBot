@@ -8,7 +8,7 @@ env:
   - variable: GOOGLE_CLIENT_ID
     # Referenciamos el Client ID desde Secret Manager
     # Asegúrate de haber creado un secreto en Secret Manager llamado "GOOGLE_CLIENT_ID_SECRET"
-    secret: projects/672912123894/secrets/GOOGLE_CLIENT_ID# Nombre del secreto en Cloud Secret Manager
+    secret: projects/672912123894/secrets/GOOGLE_CLIENT_ID # Nombre del secreto en Cloud Secret Manager
     availability:
       - RUNTIME # Solo necesario en tiempo de ejecución
 
