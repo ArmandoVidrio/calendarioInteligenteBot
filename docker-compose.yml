@@ -19,6 +19,7 @@ services:
       - N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN=true
       - N8N_PUSH_BACKEND=websocket
       - N8N_METRICS=false
+      - N8N_API_KEY=${N8N_API_KEY}
     ports:
       - "5678:5678"
     volumes:
