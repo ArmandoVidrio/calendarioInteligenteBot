@@ -174,7 +174,20 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
     return res.status(400).send('searchTitle must be a non-empty string.');
   }
 
+  if (eventDetails.start && eventDetails.start.dateTime && (!eventDetails.end || !eventDetails.end.dateTime)) {
+    const startDate = new Date(eventDetails.start.dateTime);
+    if (!isNaN(startDate.getTime())) {
+      const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // Sumar 1 hora
+      eventDetails.end = {
+        dateTime: endDate.toISOString(),
+        timeZone: eventDetails.start.timeZone || "America/Mexico_City" // Usa la zona horaria de inicio, o un default
+      };
+    }
+  }
+
+
   try {
+    // Aseguramos que firebaseUid sea una cadena
     const firebaseUidAsString = String(firebaseUid);
 
     const userDoc = await db.collection('users').doc(firebaseUidAsString).get();
