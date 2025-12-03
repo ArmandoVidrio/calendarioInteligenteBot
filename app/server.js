@@ -16,6 +16,7 @@ app.use(cors());
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+const N8N_API_KEY = process.env.N8N_API_KEY;
 
 const oauth2Client = new OAuth2Client(
   GOOGLE_CLIENT_ID,
@@ -28,26 +29,22 @@ const CALENDAR_SCOPES = [
   'https://www.googleapis.com/auth/calendar'        // Acceso a ver y editar calendarios
 ];
 
-// --- Middleware para autenticación con API Key ---
-const N8N_API_KEY = process.env.N8N_API_KEY;
-
 const authenticateN8n = (req, res, next) => {
   if (!N8N_API_KEY) {
     console.warn('ADVERTENCIA DE SEGURIDAD: N8N_API_KEY no está configurada. Los endpoints de API están desprotegidos.');
-    return next(); // Si no hay API Key configurada, permite continuar (solo para desarrollo/pruebas)
+    return next();
   }
 
-  const providedApiKey = req.headers['x-api-key']; // N8N debe enviar la API Key en este header
+  const providedApiKey = req.headers['x-api-key'];
 
   if (!providedApiKey || providedApiKey !== N8N_API_KEY) {
     console.warn(`Intento de acceso no autorizado con API Key: ${providedApiKey}`);
     return res.status(401).send('Unauthorized: Invalid API Key');
   }
-  next(); // La API Key es válida, continúa con la ruta
+  next();
 };
 
 // --- RUTAS AUTENTICACION ---
-// --- Endpoint para iniciar el flujo de autenticación ---
 app.get('/auth/initiate-google-calendar-auth', async (req, res) => {
   // n8n o tu cliente debería enviar un identificador único para el usuario,
   // por ejemplo, el ID de Telegram del usuario.
@@ -68,7 +65,7 @@ app.get('/auth/initiate-google-calendar-auth', async (req, res) => {
     } else {
       // 2. Si no existe, crear un nuevo usuario de Firebase
       const newFirebaseUser = await admin.auth().createUser({
-        uid: `telegram-${telegramUserId}`,
+        uid: telegramUserId,
         displayName: `Telegram User ${telegramUserId}`,
       });
       firebaseUid = newFirebaseUser.uid;
@@ -101,31 +98,25 @@ app.get('/auth/initiate-google-calendar-auth', async (req, res) => {
 
 
 // --- RUTAS DE CALENDARIO ---
-// --- Ruta de callback de Google (donde Google redirige al usuario) ---
 app.get('/auth/google-calendar-callback', async (req, res) => {
   try {
-    const { code, state: firebaseUid } = req.query; // 'state' contendrá nuestro firebaseUid
+    const { code, state: firebaseUid } = req.query;
 
     if (!code || !firebaseUid) {
       return res.status(400).send('Missing authorization code or Firebase UID.');
     }
 
-    // Intercambiar el código de autorización por tokens
     const { tokens } = await oauth2Client.getToken(code);
 
     // Guardar el refresh_token en Firestore asociado al firebaseUid
     await db.collection('users').doc(firebaseUid).set({
       googleCalendarRefreshToken: tokens.refresh_token,
-      googleCalendarAccessToken: tokens.access_token, // Opcional, solo para uso inmediato
-      googleCalendarExpiryDate: new Date(tokens.expiry_date), // Opcional
+      googleCalendarAccessToken: tokens.access_token,
+      googleCalendarExpiryDate: new Date(tokens.expiry_date),
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    }, { merge: true }); // Usar merge para no sobrescribir otros datos del usuario
+    }, { merge: true });
 
-    // Puedes enviar un mensaje de éxito al usuario en el navegador
     res.status(200).send('<h1>Google Calendar access granted!</h1><p>You can now close this tab.</p>');
-
-    // Opcional: Enviar una notificación a n8n para indicar que el usuario ha autorizado
-    // Puedes implementar un webhook o alguna otra forma de comunicación aquí.
 
   } catch (error) {
     console.error('Error during Google Calendar callback:', error);
@@ -293,6 +284,32 @@ app.get('/api/list-events-by-time', authenticateN8n, async (req, res) => {
   } catch (error) {
     console.error('Error listing events by time:', error);
     res.status(500).send(`Failed to list events: ${error.message}`);
+  }
+});
+
+// 5. NUEVO Endpoint para verificar la existencia de un usuario
+app.get('/api/user-exists', authenticateN8n, async (req, res) => {
+  const { firebaseUid } = req.query;
+
+  if (!firebaseUid) {
+    return res.status(400).json({ message: 'Missing firebaseUid query parameter.' });
+  }
+
+  try {
+    const userDoc = await db.collection('users').doc(firebaseUid).get();
+
+    // Verificamos si el documento existe Y si tiene un refresh_token (lo que indica autorización)
+    const existsAndAuthorized = userDoc.exists && userDoc.data()?.googleCalendarRefreshToken !== undefined;
+
+    res.status(200).json({
+      firebaseUid: firebaseUid,
+      exists: existsAndAuthorized,
+      message: existsAndAuthorized ? 'User found' : 'User not found'
+    });
+
+  } catch (error) {
+    console.error('Error checking user existence:', error);
+    res.status(500).json({ message: `Failed to check user existence: ${error.message}` });
   }
 });
 
