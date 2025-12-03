@@ -1,245 +1,140 @@
 # Backend de Google Calendar para Telegram Bot (Firebase App Hosting)
 
-Este repositorio contiene el backend de Node.js implementado con Express, diseñado para integrarse con un bot de Telegram (a través de n8n) y la API de Google Calendar. Permite a los usuarios autorizar el acceso a su Google Calendar, y al bot de Telegram (mediante n8n) crear, modificar, eliminar y consultar eventos en nombre de esos usuarios.
-Está alojado en Firebase App Hosting utilizando Cloud Run, lo que proporciona escalabilidad y una integración nativa con otros servicios de Firebase y Google Cloud.
+## 📝 Descripción General
 
-## Tabla de Contenidos
+Este proyecto implementa un backend en **Node.js + Express**, alojado en **Firebase App Hosting**, que actúa como puente entre un **bot de Telegram** (orquestado mediante n8n) y **Google Calendar**.
 
-* Configuración del Proyecto
-* Google Cloud Project Setup
-* Firebase App Hosting Setup
-* Variables de Entorno y Secretos
-* Endpoints
+El propósito del backend es permitir que los usuarios autoricen el acceso a su Google Calendar mediante OAuth 2.0, y posteriormente, que n8n pueda crear, modificar, eliminar y consultar eventos del calendario de esos usuarios, utilizando endpoints seguros protegidos por API Key.
 
-  * GET /auth/initiate-google-calendar-auth
-  * GET /auth/google-calendar-callback
-  * POST /api/create-calendar-event
-  * PUT /api/update-calendar-event
-  * DELETE /api/delete-calendar-event
-  * POST /api/check-event-at-time
-* Consideraciones de Seguridad
-* Tecnologías Utilizadas
+El sistema almacena tokens de acceso y refresco en Firestore y expone endpoints REST diseñados específicamente para automatizaciones.
 
 ---
 
-## 1. Configuración del Proyecto
+## 📌 Endpoints
 
-### Google Cloud Project Setup
-
-#### Habilitar APIs
-
-Asegúrate de que las siguientes APIs estén habilitadas en tu proyecto de Google Cloud (`telegram-bot-ac92a`):
-
-* Google Calendar API
-* Cloud Firestore API
-* Identity Toolkit API (para Firebase Authentication)
-* Cloud Secret Manager API
-* Service Usage API
-* Cloud Run API
-
-#### Configurar Credenciales OAuth 2.0
-
-1. Ve a **Google Cloud Console > APIs y servicios > Credenciales**.
-2. Crea un **ID de cliente de OAuth** de tipo *Aplicación web*.
-3. Guarda el *Client ID* y el *Client Secret*.
-4. En *URIs de redireccionamiento autorizadas* agrega:
+La URL base del backend corresponde al dominio asignado por Firebase App Hosting:
 
 ```
-https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/auth/google-calendar-callback
-```
-
-#### Crear Instancia de Cloud Firestore
-
-Ve a **Firebase Console > Build > Firestore Database** y crea una base de datos si aún no existe.
-
-#### Habilitar Firebase Authentication
-
-Ve a **Firebase Console > Build > Authentication** y haz clic en *Comenzar*. No requiere proveedores adicionales.
-
-#### Otorgar Permisos IAM Esenciales
-
-Asegúrate de que la cuenta de servicio:
-
-```
-firebase-app-hosting-compute@telegram-bot-ac92a.iam.gserviceaccount.com
-```
-
-tenga el rol:
-
-```
-roles/serviceusage.serviceUsageConsumer
-```
-
-### Firebase App Hosting Setup
-
-Este backend se despliega con Firebase App Hosting usando un `apphosting.yaml`.
-
----
-
-## Variables de Entorno y Secretos
-
-### Crear Secretos en Secret Manager
-
-Crea los siguientes secretos:
-
-* `GOOGLE_CLIENT_ID_SECRET`
-* `CLIENT_SECRET_TELEGRAM_BOT`
-* `MY_N8N_SECRET_KEY`
-
-### Configurar `apphosting.yaml`
-
-```yaml
-runConfig:
-  minInstances: 0
-  maxInstances: 2
-
-env:
-  - variable: GOOGLE_CLIENT_ID
-    secret: projects/672912123894/secrets/GOOGLE_CLIENT_ID_SECRET
-    availability:
-      - RUNTIME
-
-  - variable: GOOGLE_CLIENT_SECRET
-    secret: projects/672912123894/secrets/CLIENT_SECRET_TELEGRAM_BOT
-    availability:
-      - RUNTIME
-
-  - variable: GOOGLE_REDIRECT_URI
-    value: https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/auth/google-calendar-callback
-    availability:
-      - RUNTIME
-
-  - variable: N8N_API_KEY
-    secret: projects/672912123894/secrets/MY_N8N_SECRET_KEY
-    availability:
-      - RUNTIME
-```
-
-### Otorgar Acceso a los Secretos
-
-```
-firebase apphosting:secrets:grantaccess GOOGLE_CLIENT_ID_SECRET --backend google-auth-server-ds
-firebase apphosting:secrets:grantaccess CLIENT_SECRET_TELEGRAM_BOT --backend google-auth-server-ds
-firebase apphosting:secrets:grantaccess MY_N8N_SECRET_KEY --backend google-auth-server-ds
+https://<tu-backend>.hosted.app
 ```
 
 ---
 
-## 2. Endpoints
+### 1. **GET /auth/initiate-google-calendar-auth**
 
-Base URL del backend:
+Inicia el flujo OAuth 2.0 para vincular el Google Calendar del usuario.
 
-```
-https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app
-```
-
----
-
-### GET /auth/initiate-google-calendar-auth
-
-Inicia el flujo OAuth y genera la URL de consentimiento de Google.
-
-**Query params:**
-
-* `telegramUserId` (string, requerido)
+**Método:** `GET`  
+**Query Params:**
+- `telegramUserId` (string)
 
 **Ejemplo:**
-
 ```
 GET /auth/initiate-google-calendar-auth?telegramUserId=123456789
 ```
 
 **Respuesta:**
-
 ```json
 {
-  "login_url": "https://accounts.google.com/...",
+  "login_url": "https://accounts.google.com/o/oauth2/auth?...",
   "firebaseUid": "telegram-123456789"
 }
 ```
 
 ---
 
-### GET /auth/google-calendar-callback
+## 📅 Endpoints de Calendario (Protegidos con API Key)
 
-Callback que recibe `code` y `state`, genera `access_token` + `refresh_token` y los almacena.
-
-Respuesta: HTML simple indicando que el acceso fue otorgado.
-
----
-
-## Endpoints protegidos (`/api/*`)
-
-Requieren header:
+Todos los endpoints `/api/*` requieren:
 
 ```
-x-api-key: TU_MY_N8N_SECRET_KEY
+x-api-key: TU_API_KEY
 ```
 
 ---
 
-### POST /api/create-calendar-event
+### 2. **POST /api/create-calendar-event**
 
 Crea un evento en el calendario del usuario.
 
 **Body:**
-
 ```json
 {
   "firebaseUid": "telegram-123456789",
-  "eventDetails": { ... }
+  "eventDetails": {
+    "summary": "Recordatorio",
+    "description": "Descripción del evento",
+    "start": { "dateTime": "...", "timeZone": "..." },
+    "end": { "dateTime": "...", "timeZone": "..." }
+  }
 }
 ```
 
 **Respuesta:**
-
 ```json
 {
   "message": "Event created successfully!",
-  "eventLink": "https://google.com/calendar/...",
-  "eventId": "abcdefg123"
+  "eventLink": "https://www.google.com/calendar/event?eid=...",
+  "eventId": "abcdefg1234567890"
 }
 ```
 
 ---
 
-### PUT /api/update-calendar-event
+### 3. **PUT /api/update-calendar-event**
 
 Actualiza un evento existente.
 
 **Body:**
-
 ```json
 {
   "firebaseUid": "telegram-123456789",
-  "eventId": "abcdefg123",
-  "eventDetails": { ... }
+  "eventId": "abcdefg1234567890",
+  "eventDetails": {
+    "summary": "Nuevo título",
+    "start": { "dateTime": "...", "timeZone": "..." },
+    "end": { "dateTime": "...", "timeZone": "..." }
+  }
+}
+```
+
+**Respuesta:**
+```json
+{
+  "message": "Event updated successfully!",
+  "eventId": "abcdefg1234567890"
 }
 ```
 
 ---
 
-### DELETE /api/delete-calendar-event
+### 4. **DELETE /api/delete-calendar-event**
 
-Elimina un evento.
+Elimina un evento del calendario del usuario.
 
 **Body:**
-
 ```json
 {
   "firebaseUid": "telegram-123456789",
-  "eventId": "abcdefg123"
+  "eventId": "abcdefg1234567890"
+}
+```
+
+**Respuesta:**
+```json
+{
+  "message": "Event deleted successfully!",
+  "eventId": "abcdefg1234567890"
 }
 ```
 
 ---
 
-### POST /api/check-event-at-time
+### 5. **POST /api/check-event-at-time**
 
-Verifica si existe un evento en una hora específica.
+Verifica si existe un evento en un horario dado.
 
 **Body:**
-
 ```json
 {
   "firebaseUid": "telegram-123456789",
@@ -248,28 +143,43 @@ Verifica si existe un evento en una hora específica.
 }
 ```
 
+**Respuesta si existe evento:**
+```json
+{
+  "exists": true,
+  "message": "An event exists at/around the specified time.",
+  "foundEvent": {
+    "summary": "Reunión",
+    "start": { "dateTime": "...", "timeZone": "..." },
+    "end": { "dateTime": "...", "timeZone": "..." },
+    "id": "eventId123"
+  }
+}
+```
+
+**Respuesta si no existe evento:**
+```json
+{
+  "exists": false,
+  "message": "No event found at/around the specified time."
+}
+```
+
 ---
 
-## 3. Consideraciones de Seguridad
+## 🔐 Consideraciones de Seguridad
 
-* Usa siempre Secret Manager para credenciales.
-* Protege Firestore con reglas estrictas.
-* Limita permisos IAM.
-* No expongas refresh tokens.
-
----
-
-## 4. Tecnologías Utilizadas
-
-* Firebase App Hosting
-* Node.js & Express
-* Firebase Admin SDK
-* googleapis (Google Calendar API)
-* google-auth-library
-* Firestore
-* Cloud Run
-* cors
+- Los endpoints `/api/*` están protegidos mediante API Key.
+- Los refresh tokens se almacenan en Firestore.
+- El backend sigue el principio de mínimo privilegio.
+- Solo el backend debe acceder a los tokens almacenados en Firestore.
 
 ---
 
-Fin del archivo README.
+## 🛠 Tecnologías Utilizadas
+
+- **Node.js + Express**
+- **Firebase App Hosting**
+- **Firebase Admin SDK**
+- **Google APIs Node.js Client**
+- **Google Auth Library**
