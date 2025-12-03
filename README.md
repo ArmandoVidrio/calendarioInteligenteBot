@@ -55,7 +55,7 @@ x-api-key: TU_API_KEY
 
 ### 2. **POST /api/create-calendar-event**
 
-Crea un evento en el calendario del usuario. Las fechas deben de ir en formato `ISO 8601`, Ex: `2025-12-05T09:00:00-07:00`
+Crea un evento en el calendario del usuario. Las fechas deben de ir en formato `ISO 8601` (ej. "2025-12-05T09:00:00-08:00").
 
 **Body:**
 ```json

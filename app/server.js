@@ -52,7 +52,7 @@ const authenticateN8n = (req, res, next) => {
 };
 
 
-// --- Endpoint para iniciar el flujo de autenticación (equivalente a tu /auth/login) ---
+// --- Endpoint para iniciar el flujo de autenticación ---
 app.get('/auth/initiate-google-calendar-auth', async (req, res) => {
   // n8n o tu cliente debería enviar un identificador único para el usuario,
   // por ejemplo, el ID de Telegram del usuario.
