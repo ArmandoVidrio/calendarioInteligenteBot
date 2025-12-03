@@ -65,23 +65,6 @@ services:
       - automation-network
     restart: unless-stopped
 
-  # -------------------------------
-  # NGROK para OAUTH-SERVICE
-  # -------------------------------
-  ngrok-oauth:
-    image: ngrok/ngrok:latest
-    container_name: ngrok-oauth
-    command: http oauth-service:3002
-    environment:
-      - NGROK_AUTHTOKEN=${NGROK_AUTH_TOKEN}
-    depends_on:
-      - oauth-service
-    ports:
-      - "4041:4040"
-    networks:
-      - automation-network
-    restart: unless-stopped
-
 networks:
   automation-network:
     driver: bridge
