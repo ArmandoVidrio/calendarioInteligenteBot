@@ -84,11 +84,7 @@ app.get('/auth/initiate-google-calendar-auth', async (req, res) => {
   } catch (error) {
     console.error('Error initiating Google Calendar auth:', error);
     res.status(500).send('Failed to initiate Google Calendar authentication. Error: ' + error.message + 
-    ' Stack: ' + error.stack,
-    'client_id: ' + GOOGLE_CLIENT_ID,
-    'redirect_uri: ' + GOOGLE_REDIRECT_URI,
-    'telegramUserId: ' + telegramUserId,
-    'google_secret: ' + GOOGLE_CLIENT_SECRET
+    ' Stack: ' + error.stack
     );
   }
 });
@@ -129,12 +125,7 @@ app.get('/auth/google-calendar-callback', async (req, res) => {
 
 
 // --- Endpoint para que n8n cree eventos en el calendario ---
-// Este endpoint DEBERÍA estar protegido con alguna forma de autenticación de n8n (ej. API Key)
 app.post('/api/create-calendar-event', async (req, res) => {
-  // NOTA DE SEGURIDAD: Aquí deberías implementar una validación
-  // para asegurar que solo n8n o servicios autorizados puedan llamar este endpoint.
-  // Por ejemplo, verificar un secreto compartido en los headers.
-
   const { firebaseUid, eventDetails } = req.body;
 
   if (!firebaseUid || !eventDetails) {
