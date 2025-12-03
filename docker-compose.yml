@@ -2,26 +2,6 @@ version: "3.8"
 
 services:
   # -------------------------------
-  # OAUTH-SERVICE (Google OAuth)
-  # -------------------------------
-  oauth-service:
-    build:
-      context: ./services/oauth-service
-      dockerfile: Dockerfile
-    container_name: oauth-service
-    environment:
-      PORT: 3002
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      # REDIRECT_URI será la URL pública que ngrok asigne a este túnel
-      GOOGLE_REDIRECT_URI: "https://ontogenetical-jaylin-unwhirled.ngrok-free.dev/auth/callback"
-    ports:
-      - "4000:3002"
-    networks:
-      - automation-network
-    restart: unless-stopped
-
-  # -------------------------------
   # N8N WORKFLOW AUTOMATION
   # -------------------------------
   n8n:
