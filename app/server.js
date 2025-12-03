@@ -6,34 +6,29 @@ import admin from 'firebase-admin';
 import { google } from 'googleapis';
 import cors from 'cors';
 
-// --- Inicialización de Firebase Admin SDK ---
 admin.initializeApp();
-const db = admin.firestore(); // Para almacenar los refresh_tokens
+const db = admin.firestore();
 
 const app = express();
 app.use(express.json());
-app.use(cors()); // Habilita CORS si n8n u otro cliente va a hacer peticiones directas
+app.use(cors());
 
-// --- Variables de Entorno y Configuración OAuth ---
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
 
-// --- Configuración de OAuth2Client ---
 const oauth2Client = new OAuth2Client(
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   GOOGLE_REDIRECT_URI
 );
 
-// Scopes necesarios para Google Calendar. ¡Revisa qué permisos necesitas!
 const CALENDAR_SCOPES = [
   'https://www.googleapis.com/auth/calendar.events', // Crear, editar, eliminar eventos
   'https://www.googleapis.com/auth/calendar'        // Acceso a ver y editar calendarios
 ];
 
-// --- Middleware para autenticación con API Key (RECOMENDADO para N8N) ---
-// Define esta variable de entorno en tu apphosting.yaml y Secret Manager
+// --- Middleware para autenticación con API Key ---
 const N8N_API_KEY = process.env.N8N_API_KEY;
 
 const authenticateN8n = (req, res, next) => {
@@ -51,7 +46,7 @@ const authenticateN8n = (req, res, next) => {
   next(); // La API Key es válida, continúa con la ruta
 };
 
-
+// --- RUTAS AUTENTICACION ---
 // --- Endpoint para iniciar el flujo de autenticación ---
 app.get('/auth/initiate-google-calendar-auth', async (req, res) => {
   // n8n o tu cliente debería enviar un identificador único para el usuario,
@@ -105,6 +100,7 @@ app.get('/auth/initiate-google-calendar-auth', async (req, res) => {
 });
 
 
+// --- RUTAS DE CALENDARIO ---
 // --- Ruta de callback de Google (donde Google redirige al usuario) ---
 app.get('/auth/google-calendar-callback', async (req, res) => {
   try {
@@ -249,13 +245,12 @@ app.delete('/api/delete-calendar-event', authenticateN8n, async (req, res) => {
   }
 });
 
+// 4. Endpoint para listar eventos en un rango de tiempo específico
+app.get('/api/list-events-by-time', authenticateN8n, async (req, res) => {
+  const { firebaseUid, timeMin, timeMax } = req.query;
 
-// 4. Endpoint para verificar si hay un evento a una hora específica
-app.post('/api/check-event-at-time', authenticateN8n, async (req, res) => {
-  const { firebaseUid, queryTime, durationMinutes } = req.body; // queryTime en formato ISO (ej. "2025-12-05T09:00:00-08:00")
-
-  if (!firebaseUid || !queryTime) {
-    return res.status(400).send('Missing firebaseUid or queryTime.');
+  if (!firebaseUid || !timeMin || !timeMax) {
+    return res.status(400).send('Missing firebaseUid, timeMin, or timeMax query parameters.');
   }
 
   try {
@@ -269,52 +264,39 @@ app.post('/api/check-event-at-time', authenticateN8n, async (req, res) => {
     oauth2Client.setCredentials({ refresh_token: refreshToken });
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    // Calcular timeMin y timeMax para la consulta
-    const startDateTime = new Date(queryTime);
-    if (isNaN(startDateTime.getTime())) {
-      return res.status(400).send('Invalid queryTime format. Must be a valid ISO 8601 date string.');
-    }
+    const startDateTime = new Date(timeMin);
+    const endDateTime = new Date(timeMax);
 
-    const endDateTime = new Date(startDateTime);
-    // Si durationMinutes se proporciona, se verifica si hay eventos dentro de esa ventana.
-    // De lo contrario, se verifica si hay eventos que se superponen con una pequeña ventana de 1 minuto
-    // para encontrar cualquier actividad en el punto queryTime.
-    const effectiveDurationMinutes = durationMinutes && typeof durationMinutes === 'number' && durationMinutes > 0 ? durationMinutes : 1;
-    endDateTime.setMinutes(endDateTime.getMinutes() + effectiveDurationMinutes);
+    if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+      return res.status(400).send('Invalid timeMin or timeMax format. Must be valid ISO 8601 date strings.');
+    }
+    if (startDateTime >= endDateTime) {
+      return res.status(400).send('timeMin must be before timeMax.');
+    }
 
     const response = await calendar.events.list({
       calendarId: 'primary',
       timeMin: startDateTime.toISOString(),
       timeMax: endDateTime.toISOString(),
-      singleEvents: true, // Expande eventos recurrentes en instancias individuales
+      singleEvents: true,
       orderBy: 'startTime',
-      maxResults: 1 // Solo necesitamos saber si al menos uno existe
     });
 
     const events = response.data.items;
 
-    if (events && events.length > 0) {
-      console.log(`Event found at/around ${queryTime} for Firebase UID ${firebaseUid}.`);
-      res.status(200).json({
-        exists: true,
-        message: 'An event exists at/around the specified time.',
-        foundEvent: events[0] // Retorna el primer evento encontrado
-      });
-    } else {
-      console.log(`No event found at/around ${queryTime} for Firebase UID ${firebaseUid}.`);
-      res.status(200).json({
-        exists: false,
-        message: 'No event found at/around the specified time.'
-      });
-    }
+    console.log(`Found ${events ? events.length : 0} events for Firebase UID ${firebaseUid} between ${timeMin} and ${timeMax}.`);
+    res.status(200).json({
+      message: 'Events retrieved successfully!',
+      events: events || []
+    });
 
   } catch (error) {
-    console.error('Error checking event at time:', error);
-    res.status(500).send(`Failed to check event: ${error.message}`);
+    console.error('Error listing events by time:', error);
+    res.status(500).send(`Failed to list events: ${error.message}`);
   }
 });
 
-// --- Iniciar el servidor ---
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
