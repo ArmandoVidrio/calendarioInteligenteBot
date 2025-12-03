@@ -65,7 +65,7 @@ Crea un nuevo evento en el calendario principal de Google del usuario.
 *   **Request Body Ejemplo:**
     ```json
     {
-      "firebaseUid": "telegram-123456789",
+      "firebaseUid": "8269470160",
       "eventDetails": {
         "summary": "Recordatorio: Enviar informe mensual",
         "description": "No olvides enviar el informe a final de mes a los stakeholders.",
@@ -99,65 +99,87 @@ Crea un nuevo evento en el calendario principal de Google del usuario.
 
 ### `PUT /api/update-calendar-event`
 
-Modifica un evento existente en el calendario principal de Google del usuario.
+Modifica eventos existentes por título en el calendario principal de Google del usuario.
 
-*   **Descripción:** Actualiza los detalles de un evento específico en el Google Calendar del `firebaseUid` especificado.
+*   **Descripción:** Busca uno o varios eventos que coincidan exactamente con el `searchTitle` proporcionado y actualiza sus detalles con la información en `eventDetails`.
 *   **Método:** `PUT`
 *   **Request Body (JSON):**
     *   `firebaseUid` (string, requerido): El ID de Firebase del usuario.
-    *   `eventId` (string, requerido): El ID del evento de Google Calendar a actualizar.
-    *   `eventDetails` (object, requerido): Un objeto `Event` con los campos a actualizar. Puedes enviar solo los campos que deseas cambiar.
+    *   `searchTitle` (string, requerido): El título exacto del evento (o eventos) que deseas modificar. La búsqueda se realiza sin distinguir mayúsculas/minúsculas.
+    *   `eventDetails` (object, requerido): Un objeto `Event` con los campos a actualizar. Puedes enviar solo los campos que deseas cambiar (ej. solo `start` para cambiar la hora).
 *   **Request Body Ejemplo:**
     ```json
     {
-      "firebaseUid": "telegram-123456789",
-      "eventId": "abcdefg1234567890abcdefg",
+      "firebaseUid": "8269470160",
+      "searchTitle": "llamada demo",
       "eventDetails": {
-        "summary": "Reunión de Equipo ACTUALIZADA",
-        "location": "Sala de Conferencias B",
         "start": {
-          "dateTime": "2025-12-05T10:00:00-08:00",
-          "timeZone": "America/Los_Angeles"
+          "dateTime": "2025-12-02T09:00:00-06:00",
+          "timeZone": "America/Mexico_City"
         },
         "end": {
-          "dateTime": "2025-12-05T11:00:00-08:00",
-          "timeZone": "America/Los_Angeles"
-        }
+          "dateTime": "2025-12-02T10:00:00-06:00",
+          "timeZone": "America/Mexico_City"
+        },
+        "summary": "Nueva Llamada Demo (Actualizada)"
       }
     }
     ```
-*   **Response Ejemplo (JSON):**
+*   **Response Ejemplo (JSON - Múltiples eventos actualizados):**
     ```json
     {
-      "message": "Event updated successfully!",
-      "eventLink": "https://www.google.com/calendar/event?eid=...",
-      "eventId": "abcdefg1234567890abcdefg"
+      "message": "2 events updated successfully!",
+      "updatedEvents": [
+        {
+          "eventId": "eventId1_modificado",
+          "eventLink": "https://www.google.com/calendar/event?eid=...",
+          "summary": "Nueva Llamada Demo (Actualizada)",
+          "status": "confirmed"
+        },
+        {
+          "eventId": "eventId2_modificado",
+          "eventLink": "https://www.google.com/calendar/event?eid=...",
+          "summary": "Nueva Llamada Demo (Actualizada)",
+          "status": "confirmed"
+        }
+      ]
     }
     ```
+*   **Notas:** Si no se encuentran eventos que coincidan exactamente con el `searchTitle`, se devolverá un `404 Not Found`.
 
 ### `DELETE /api/delete-calendar-event`
 
-Elimina un evento del calendario principal de Google del usuario.
+Elimina eventos existentes por título del calendario principal de Google del usuario.
 
-*   **Descripción:** Elimina un evento específico del Google Calendar del `firebaseUid` especificado.
+*   **Descripción:** Busca uno o varios eventos que coincidan exactamente con el `searchTitle` proporcionado y los elimina.
 *   **Método:** `DELETE`
 *   **Request Body (JSON):**
     *   `firebaseUid` (string, requerido): El ID de Firebase del usuario.
-    *   `eventId` (string, requerido): El ID del evento de Google Calendar a eliminar.
+    *   `searchTitle` (string, requerido): El título exacto del evento (o eventos) que deseas eliminar. La búsqueda se realiza sin distinguir mayúsculas/minúsculas.
 *   **Request Body Ejemplo:**
     ```json
     {
-      "firebaseUid": "telegram-123456789",
-      "eventId": "abcdefg1234567890abcdefg"
+      "firebaseUid": "8269470160",
+      "searchTitle": "llamada demo"
     }
     ```
-*   **Response Ejemplo (JSON):**
+*   **Response Ejemplo (JSON - Múltiples eventos eliminados):**
     ```json
     {
-      "message": "Event deleted successfully!",
-      "eventId": "abcdefg1234567890abcdefg"
+      "message": "2 events deleted successfully!",
+      "deletedEvents": [
+        {
+          "eventId": "eventId1_eliminado",
+          "summary": "llamada demo"
+        },
+        {
+          "eventId": "eventId2_eliminado",
+          "summary": "llamada demo"
+        }
+      ]
     }
     ```
+*   **Notas:** Si no se encuentran eventos que coincidan exactamente con el `searchTitle`, se devolverá un `404 Not Found`.
 
 ### `GET /api/list-events-by-time`
 
@@ -171,7 +193,7 @@ Obtiene una lista de eventos dentro de un rango de tiempo específico en el cale
     *   `timeMax` (string, requerido): La fecha y hora de finalización del rango de búsqueda en formato [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) (ej. `"2025-12-05T12:00:00-08:00"`).
 *   **Request Ejemplo:**
     ```
-    GET https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/list-events-by-time?firebaseUid=telegram-123456789&timeMin=2025-12-05T08:00:00-08:00&timeMax=2025-12-05T12:00:00-08:00
+    GET https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/list-events-by-time?firebaseUid=8269470160&timeMin=2025-12-05T08:00:00-08:00&timeMax=2025-12-05T12:00:00-08:00
     ```
 *   **Response Ejemplo (JSON - Eventos Encontrados):**
     ```json
@@ -203,6 +225,34 @@ Obtiene una lista de eventos dentro de un rango de tiempo específico en el cale
     }
     ```
 
+### `GET /api/user-exists`
+
+Verifica si un usuario específico existe en la base de datos y ha autorizado Google Calendar.
+
+*   **Descripción:** Consulta la base de datos para determinar si un `firebaseUid` dado corresponde a un usuario que ha completado el flujo de autorización de Google Calendar (es decir, tiene un `refresh_token` almacenado).
+*   **Método:** `GET`
+*   **Query Parameters:**
+    *   `firebaseUid` (string, requerido): El ID de Firebase del usuario cuya existencia y autorización quieres verificar.
+*   **Request Ejemplo:**
+    ```
+    GET https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/user-exists?firebaseUid=8269470160
+    ```
+*   **Response Ejemplo (JSON - Usuario encontrado y autorizado):**
+    ```json
+    {
+      "firebaseUid": "8269470160",
+      "exists": true,
+      "message": "User found and authorized for Google Calendar."
+    }
+    ```
+*   **Response Ejemplo (JSON - Usuario no encontrado o no autorizado):**
+    ```json
+    {
+      "firebaseUid": "OTRO_USUARIO",
+      "exists": false,
+      "message": "User not found or not authorized for Google Calendar."
+    }
+    ```
 ---
 
 ## 2. Consideraciones de Seguridad

@@ -162,16 +162,22 @@ app.post('/api/create-calendar-event', authenticateN8n, async (req, res) => {
   }
 });
 
-// 2. Endpoint para modificar un evento existente en el calendario
+// 2. Endpoint para modificar un evento existente por título
 app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
-  const { firebaseUid, eventId, eventDetails } = req.body;
+  const { firebaseUid, searchTitle, eventDetails } = req.body;
 
-  if (!firebaseUid || !eventId || !eventDetails) {
-    return res.status(400).send('Missing firebaseUid, eventId, or eventDetails.');
+  if (!firebaseUid || !searchTitle || !eventDetails) {
+    return res.status(400).send('Missing firebaseUid, searchTitle, or eventDetails.');
+  }
+  // Aseguramos que searchTitle sea una cadena no vacía
+  if (typeof searchTitle !== 'string' || searchTitle.trim() === '') {
+    return res.status(400).send('searchTitle must be a non-empty string.');
   }
 
   try {
-    const userDoc = await db.collection('users').doc(firebaseUid).get();
+    const firebaseUidAsString = String(firebaseUid);
+
+    const userDoc = await db.collection('users').doc(firebaseUidAsString).get();
     const refreshToken = userDoc.data()?.googleCalendarRefreshToken;
 
     if (!refreshToken) {
@@ -181,17 +187,74 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
     oauth2Client.setCredentials({ refresh_token: refreshToken });
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    const response = await calendar.events.update({
-      calendarId: 'primary',
-      eventId: eventId,             // El ID del evento a actualizar
-      resource: eventDetails,       // El objeto de evento con los campos actualizados (parcial o completo)
+    // Determinar rango de búsqueda para eventos.list
+    let searchTimeMin, searchTimeMax;
+    const newEventStartDate = eventDetails.start?.dateTime ? new Date(eventDetails.start.dateTime) : null;
+
+    if (newEventStartDate && !isNaN(newEventStartDate.getTime())) {
+        // Buscar 1 año antes y 1 año después de la nueva fecha de inicio del evento
+        searchTimeMin = new Date(newEventStartDate);
+        searchTimeMin.setFullYear(searchTimeMin.getFullYear() - 1);
+
+        searchTimeMax = new Date(newEventStartDate);
+        searchTimeMax.setFullYear(searchTimeMax.getFullYear() + 1);
+    } else {
+        // Fallback: buscar 1 año alrededor de la fecha actual si no se proporciona fecha específica
+        const now = new Date();
+        searchTimeMin = new Date(now);
+        searchTimeMin.setFullYear(now.getFullYear() - 1);
+        searchTimeMax = new Date(now);
+        searchTimeMax.setFullYear(now.getFullYear() + 1);
+    }
+
+    // Buscar eventos por título (q hace búsqueda de texto completo)
+    const searchResponse = await calendar.events.list({
+        calendarId: 'primary',
+        q: searchTitle, // Búsqueda de texto completo
+        timeMin: searchTimeMin.toISOString(),
+        timeMax: searchTimeMax.toISOString(),
+        singleEvents: true, // Expandir eventos recurrentes
+        orderBy: 'startTime'
     });
 
-    console.log(`Event updated for Firebase UID ${firebaseUid}, Event ID ${eventId}:`, response.data.htmlLink);
+    const matchingEvents = searchResponse.data.items || [];
+    const updatedEvents = [];
+
+    if (matchingEvents.length === 0) {
+        return res.status(404).json({
+            message: `No events found with title containing "${searchTitle}" in the specified time range.`,
+            searchTitle: searchTitle
+        });
+    }
+
+    // Filtrar por coincidencia EXACTA en el summary y actualizar
+    for (const event of matchingEvents) {
+        if (event.summary && event.summary.toLowerCase() === searchTitle.toLowerCase()) {
+            const updateResponse = await calendar.events.update({
+                calendarId: 'primary',
+                eventId: event.id,
+                resource: eventDetails, // Esto fusionará los cambios con los datos existentes
+            });
+            updatedEvents.push({
+                eventId: updateResponse.data.id,
+                eventLink: updateResponse.data.htmlLink,
+                summary: updateResponse.data.summary,
+                status: updateResponse.data.status
+            });
+        }
+    }
+
+    if (updatedEvents.length === 0) {
+        return res.status(404).json({
+            message: `No exact matching events found with title "${searchTitle}" for update.`,
+            searchTitle: searchTitle
+        });
+    }
+
+    console.log(`Updated ${updatedEvents.length} events for Firebase UID ${firebaseUidAsString} with title "${searchTitle}".`);
     res.status(200).json({
-      message: 'Event updated successfully!',
-      eventLink: response.data.htmlLink,
-      eventId: response.data.id
+        message: `${updatedEvents.length} events updated successfully!`,
+        updatedEvents: updatedEvents
     });
 
   } catch (error) {
@@ -200,16 +263,23 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
   }
 });
 
-// 3. Endpoint para eliminar un evento del calendario
+// 3. Endpoint para eliminar un evento por título
 app.delete('/api/delete-calendar-event', authenticateN8n, async (req, res) => {
-  const { firebaseUid, eventId } = req.body; // Para DELETE, se suele usar path params o query params, pero body también funciona con JSON
+  const { firebaseUid, searchTitle } = req.body;
 
-  if (!firebaseUid || !eventId) {
-    return res.status(400).send('Missing firebaseUid or eventId.');
+  if (!firebaseUid || !searchTitle) {
+    return res.status(400).send('Missing firebaseUid or searchTitle.');
+  }
+  // Aseguramos que searchTitle sea una cadena no vacía
+  if (typeof searchTitle !== 'string' || searchTitle.trim() === '') {
+    return res.status(400).send('searchTitle must be a non-empty string.');
   }
 
   try {
-    const userDoc = await db.collection('users').doc(firebaseUid).get();
+    // Aseguramos que firebaseUid sea una cadena
+    const firebaseUidAsString = String(firebaseUid);
+
+    const userDoc = await db.collection('users').doc(firebaseUidAsString).get();
     const refreshToken = userDoc.data()?.googleCalendarRefreshToken;
 
     if (!refreshToken) {
@@ -219,15 +289,58 @@ app.delete('/api/delete-calendar-event', authenticateN8n, async (req, res) => {
     oauth2Client.setCredentials({ refresh_token: refreshToken });
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    await calendar.events.delete({
-      calendarId: 'primary',
-      eventId: eventId, // El ID del evento a eliminar
+    // Determinar rango de búsqueda para eventos.list (buscamos un amplio rango por si el evento es viejo o futuro)
+    const now = new Date();
+    const searchTimeMin = new Date(now);
+    searchTimeMin.setFullYear(now.getFullYear() - 5); // 5 años atrás
+    const searchTimeMax = new Date(now);
+    searchTimeMax.setFullYear(now.getFullYear() + 5); // 5 años adelante
+
+    // Buscar eventos por título (q hace búsqueda de texto completo)
+    const searchResponse = await calendar.events.list({
+        calendarId: 'primary',
+        q: searchTitle, // Búsqueda de texto completo
+        timeMin: searchTimeMin.toISOString(),
+        timeMax: searchTimeMax.toISOString(),
+        singleEvents: true, // Expandir eventos recurrentes
+        orderBy: 'startTime'
     });
 
-    console.log(`Event deleted for Firebase UID ${firebaseUid}, Event ID ${eventId}`);
+    const matchingEvents = searchResponse.data.items || [];
+    const deletedEvents = [];
+
+    if (matchingEvents.length === 0) {
+        return res.status(404).json({
+            message: `No events found with title containing "${searchTitle}" in the specified time range for deletion.`,
+            searchTitle: searchTitle
+        });
+    }
+
+    // Filtrar por coincidencia EXACTA en el summary y eliminar
+    for (const event of matchingEvents) {
+        if (event.summary && event.summary.toLowerCase() === searchTitle.toLowerCase()) {
+            await calendar.events.delete({
+                calendarId: 'primary',
+                eventId: event.id,
+            });
+            deletedEvents.push({
+                eventId: event.id,
+                summary: event.summary
+            });
+        }
+    }
+
+    if (deletedEvents.length === 0) {
+        return res.status(404).json({
+            message: `No exact matching events found with title "${searchTitle}" for deletion.`,
+            searchTitle: searchTitle
+        });
+    }
+
+    console.log(`Deleted ${deletedEvents.length} events for Firebase UID ${firebaseUidAsString} with title "${searchTitle}".`);
     res.status(200).json({
-      message: 'Event deleted successfully!',
-      eventId: eventId
+        message: `${deletedEvents.length} events deleted successfully!`,
+        deletedEvents: deletedEvents
     });
 
   } catch (error) {
