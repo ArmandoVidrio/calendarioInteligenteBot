@@ -23,3 +23,8 @@ env:
     value: https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/auth/google-calendar-callback
     availability:
       - RUNTIME
+
+  - variable: N8N_API_KEY
+    secret: projects/672912123894/secrets/MY_N8N_SECRET_KEY
+    availability:
+      - RUNTIME
