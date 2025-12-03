@@ -1,4 +1,3 @@
-venv/
 .env
 credentials.json
-node_modeules/
+node_modules/

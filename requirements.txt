@@ -1,9 +1,0 @@
-fastapi
-uvicorn[standard]
-msal
-requests
-python-dotenv
-pydantic
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
