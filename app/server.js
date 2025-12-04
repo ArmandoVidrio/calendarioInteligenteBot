@@ -162,7 +162,7 @@ app.post('/api/create-calendar-event', authenticateN8n, async (req, res) => {
   }
 });
 
-// 2. Endpoint para modificar un evento existente por título
+// 2. Endpoint para modificar un evento existente (CON BÚSQUEDA HÍBRIDA)
 app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
   const { firebaseUid, searchTitle, eventDetails } = req.body;
 
@@ -170,11 +170,12 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
     return res.status(400).send('Missing firebaseUid, searchTitle, or eventDetails.');
   }
   
-  if (typeof searchTitle !== 'string' || searchTitle.trim() === '') {
+  const targetTitle = String(searchTitle).trim().toLowerCase();
+  if (targetTitle === '') {
     return res.status(400).send('searchTitle must be a non-empty string.');
   }
 
-  // Auto-completar fecha de fin si falta (Lógica de servidor como respaldo)
+  // Auto-completar fecha de fin si falta
   if (eventDetails.start && eventDetails.start.dateTime && (!eventDetails.end || !eventDetails.end.dateTime)) {
     const startDate = new Date(eventDetails.start.dateTime);
     if (!isNaN(startDate.getTime())) {
@@ -198,52 +199,83 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
     oauth2Client.setCredentials({ refresh_token: refreshToken });
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    // --- CORRECCIÓN 1: RANGO DE BÚSQUEDA SIEMPRE BASADO EN "AHORA" ---
-    // No usamos la fecha del evento nuevo, porque si mueves un evento de 2023 a 2025,
-    // la búsqueda basada en 2025 no encontraría el original de 2023.
+    let matchingEvents = [];
+    
+    // --- ESTRATEGIA 1: BÚSQUEDA GLOBAL (Rango Amplio + parámetro 'q') ---
     const now = new Date();
-    
-    const searchTimeMin = new Date(now);
-    searchTimeMin.setFullYear(now.getFullYear() - 1); // Buscar desde hace 1 año
-    
-    const searchTimeMax = new Date(now);
-    searchTimeMax.setFullYear(now.getFullYear() + 2); // Hasta dentro de 2 años
+    const globalMin = new Date(now); globalMin.setFullYear(now.getFullYear() - 1);
+    const globalMax = new Date(now); globalMax.setFullYear(now.getFullYear() + 2);
 
-    console.log(`Searching for "${searchTitle}" from ${searchTimeMin.toISOString()} to ${searchTimeMax.toISOString()}`);
-
-    const searchResponse = await calendar.events.list({
+    console.log(`[Attempt 1] Global search for "${targetTitle}"...`);
+    
+    const globalSearchResponse = await calendar.events.list({
         calendarId: 'primary',
-        q: searchTitle, 
-        timeMin: searchTimeMin.toISOString(),
-        timeMax: searchTimeMax.toISOString(),
+        q: targetTitle, 
+        timeMin: globalMin.toISOString(),
+        timeMax: globalMax.toISOString(),
         singleEvents: true,
         orderBy: 'startTime'
     });
 
-    const matchingEvents = searchResponse.data.items || [];
-    const updatedEvents = [];
+    if (globalSearchResponse.data.items && globalSearchResponse.data.items.length > 0) {
+        matchingEvents = globalSearchResponse.data.items;
+        console.log(`[Attempt 1] Found ${matchingEvents.length} candidates via Global Search.`);
+    }
+
+    // --- ESTRATEGIA 2: FALLBACK LOCAL (Si Estrategia 1 falló) ---
+    // Si no encontró nada con 'q', buscamos TODOS los eventos alrededor de la fecha objetivo
+    // y filtramos manualmente en JS. Esto es más preciso para eventos recientes.
+    if (matchingEvents.length === 0 && eventDetails.start && eventDetails.start.dateTime) {
+        console.log(`[Attempt 1] Failed. Starting [Attempt 2] Local Fallback Search...`);
+        
+        const targetDate = new Date(eventDetails.start.dateTime);
+        if (!isNaN(targetDate.getTime())) {
+            // Buscamos 2 días antes y 2 días después de la fecha OBJETIVO
+            const localMin = new Date(targetDate); localMin.setDate(localMin.getDate() - 2);
+            const localMax = new Date(targetDate); localMax.setDate(localMax.getDate() + 2);
+
+            const localListResponse = await calendar.events.list({
+                calendarId: 'primary',
+                timeMin: localMin.toISOString(),
+                timeMax: localMax.toISOString(),
+                singleEvents: true,
+                orderBy: 'startTime'
+            });
+
+            const allLocalEvents = localListResponse.data.items || [];
+            
+            // Filtro manual de Javascript (fuzzy search)
+            matchingEvents = allLocalEvents.filter(e => {
+                const summary = (e.summary || "").toLowerCase();
+                return summary.includes(targetTitle);
+            });
+            
+            console.log(`[Attempt 2] Scanned ${allLocalEvents.length} local events. Found ${matchingEvents.length} matches manually.`);
+        }
+    }
 
     if (matchingEvents.length === 0) {
         return res.status(404).json({
-            message: `No events found with title containing "${searchTitle}".`,
-            searchTitle: searchTitle
+            message: `No events found with title containing "${targetTitle}" (checked Global and Local range).`,
+            searchTitle: targetTitle
         });
     }
 
-    // Filtrar y Actualizar
+    // --- PROCESO DE ACTUALIZACIÓN ---
+    const updatedEvents = [];
+    
     for (const event of matchingEvents) {
-        // Normalizamos strings para comparar mejor
-        const eventSummary = (event.summary || "").trim().toLowerCase();
-        const targetTitle = searchTitle.trim().toLowerCase();
-
-        // Puedes usar 'includes' para ser más flexible o mantener '===' para exactitud
-        if (eventSummary === targetTitle) {
+        // Doble verificación del título antes de editar (Safety Check)
+        const eventSummary = (event.summary || "").toLowerCase();
+        
+        // Verificamos que el título realmente contenga lo que buscamos
+        if (eventSummary.includes(targetTitle)) {
+            console.log(`Updating event ID: ${event.id} - "${event.summary}"`);
             
-            // --- CORRECCIÓN 2: USAR PATCH EN LUGAR DE UPDATE ---
-            const updateResponse = await calendar.events.patch({ // <--- CAMBIO CLAVE
+            const updateResponse = await calendar.events.patch({
                 calendarId: 'primary',
                 eventId: event.id,
-                resource: eventDetails, // Solo actualiza los campos enviados (ej. solo la hora)
+                resource: eventDetails,
             });
             
             updatedEvents.push({
@@ -257,12 +289,10 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
 
     if (updatedEvents.length === 0) {
         return res.status(404).json({
-            message: `Found events similar to "${searchTitle}" but none matched exactly.`,
-            foundSimilar: matchingEvents.map(e => e.summary)
+            message: `Candidates found but none passed final strict title check for "${targetTitle}".`,
         });
     }
 
-    console.log(`Updated ${updatedEvents.length} events.`);
     res.status(200).json({
         message: `${updatedEvents.length} events updated successfully!`,
         updatedEvents: updatedEvents
