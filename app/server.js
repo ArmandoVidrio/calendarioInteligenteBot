@@ -162,7 +162,7 @@ app.post('/api/create-calendar-event', authenticateN8n, async (req, res) => {
   }
 });
 
-// 2. Endpoint para modificar un evento existente (CON BÚSQUEDA HÍBRIDA)
+// 2. Endpoint para modificar un evento existente (CON BÚSQUEDA HÍBRIDA AMPLIADA)
 app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
   const { firebaseUid, searchTitle, eventDetails } = req.body;
 
@@ -223,16 +223,15 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
     }
 
     // --- ESTRATEGIA 2: FALLBACK LOCAL (Si Estrategia 1 falló) ---
-    // Si no encontró nada con 'q', buscamos TODOS los eventos alrededor de la fecha objetivo
-    // y filtramos manualmente en JS. Esto es más preciso para eventos recientes.
+    // Si no encontró nada con 'q', buscamos eventos MANUALMENTE en un rango cercano.
     if (matchingEvents.length === 0 && eventDetails.start && eventDetails.start.dateTime) {
-        console.log(`[Attempt 1] Failed. Starting [Attempt 2] Local Fallback Search...`);
+        console.log(`[Attempt 1] Failed. Starting [Attempt 2] Local Fallback Search (1 Week Range)...`);
         
         const targetDate = new Date(eventDetails.start.dateTime);
         if (!isNaN(targetDate.getTime())) {
-            // Buscamos 2 días antes y 2 días después de la fecha OBJETIVO
-            const localMin = new Date(targetDate); localMin.setDate(localMin.getDate() - 2);
-            const localMax = new Date(targetDate); localMax.setDate(localMax.getDate() + 2);
+            // CAMBIO AQUÍ: Ampliado a +/- 7 días (1 semana antes y después)
+            const localMin = new Date(targetDate); localMin.setDate(localMin.getDate() - 7);
+            const localMax = new Date(targetDate); localMax.setDate(localMax.getDate() + 7);
 
             const localListResponse = await calendar.events.list({
                 calendarId: 'primary',
@@ -250,13 +249,13 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
                 return summary.includes(targetTitle);
             });
             
-            console.log(`[Attempt 2] Scanned ${allLocalEvents.length} local events. Found ${matchingEvents.length} matches manually.`);
+            console.log(`[Attempt 2] Scanned ${allLocalEvents.length} events (from ${localMin.toISOString()} to ${localMax.toISOString()}). Found ${matchingEvents.length} matches manually.`);
         }
     }
 
     if (matchingEvents.length === 0) {
         return res.status(404).json({
-            message: `No events found with title containing "${targetTitle}" (checked Global and Local range).`,
+            message: `No events found with title containing "${targetTitle}" (checked Global and Local 1-week range).`,
             searchTitle: targetTitle
         });
     }
@@ -265,10 +264,8 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
     const updatedEvents = [];
     
     for (const event of matchingEvents) {
-        // Doble verificación del título antes de editar (Safety Check)
         const eventSummary = (event.summary || "").toLowerCase();
         
-        // Verificamos que el título realmente contenga lo que buscamos
         if (eventSummary.includes(targetTitle)) {
             console.log(`Updating event ID: ${event.id} - "${event.summary}"`);
             
