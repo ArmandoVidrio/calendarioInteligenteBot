@@ -128,18 +128,18 @@ class WelcomeStrategy extends CommandStrategy {
     validate(args) { return { isValid: true }; }
     buildPayload(args, uid) {
         return {
-            message: "👋 ¡Hola! Soy tu asistente de calendario.\n\n⚡ **Comando Rápido:**\n`/agendar Título | Fecha Inicio`\n_(Se creará un evento de 1 hora automáticamente)_\n\nComandos disponibles:\n📅 `/agendar` - Crear eventos\n🔍 `/modificar` - Cambiar horario\n🗑️ `/cancelar` - Borrar eventos\n🗓️ `/checar` - Ver agenda del día\n\nEscribe `/help` para ver todos los detalles y ejemplos.",
+            message: "👋 ¡Hola! Soy tu asistente de calendario.\n\n⚡ **Comando Rápido:**\n`/agendar Título | Fecha Inicio`\n_(Se creará un evento de 1 hora automáticamente)_\n\nComandos disponibles:\n📅 `/agendar` - Crear eventos\n🔍 `/modificar` - Cambiar horario\n🗑️ `/cancelar` - Borrar eventos\n🗓️ `/checar` - Ver agenda\n\nEscribe `/help` para ver todos los detalles.",
             action: 'bienvenida' 
         };
     }
 }
 
-// AYUDA (ACTUALIZADO CON FORMATO CONSISTENTE)
+// AYUDA
 class HelpStrategy extends CommandStrategy {
     validate(args) { return { isValid: true }; }
     buildPayload(args, uid) {
         return {
-            message: "📘 **GUÍA DE USO**\n\n📅 **AGENDAR EVENTOS**\n\n1️⃣ **Rápida (1 hora por defecto):**\n`/agendar Título | Fecha Inicio`\nEj: `/agendar Gym | hoy a las 18:00`\n\n2️⃣ **Completa (Inicio y Fin):**\n`/agendar Título | Inicio | Fin`\nEj: `/agendar Reunión | mañana 9am | mañana 10:30am`\n\n--------\n\n🔍 **MODIFICAR EVENTOS**\n\n1️⃣ **Rápida (Mover y ajustar a 1 hora):**\n`/modificar Título | Nueva Inicio`\nEj: `/modificar Gym | hoy 19:00`\n\n2️⃣ **Completa (Cambiar todo el horario):**\n`/modificar Título | Inicio | Fin`\nEj: `/modificar Cena | hoy 8pm | hoy 10pm`\n\n✨ **Extras (para ambos):**\nAl final puedes poner: `| Descripción: ...` o `| Ubicación: ...`\n\n--------\n\n🗑️ **CANCELAR**\n`/cancelar Título Exacto`\n\n🗓️ **CHECAR AGENDA**\n`/checar hoy`\n`/checar mañana`",
+            message: "📘 **GUÍA DE USO**\n\n📅 **AGENDAR**\n`/agendar Título | Fecha Inicio`\n`/agendar Título | Inicio | Fin`\nExtras: `| Descripción: ...` `| Ubicación: ...`\n\n🔍 **MODIFICAR**\n`/modificar Título | Nueva Inicio`\n\n🗑️ **CANCELAR**\n`/cancelar Título Exacto`\n\n🗓️ **CHECAR AGENDA**\n`/checar hoy`\n`/checar mañana`\n`/checar 1 semana` (Muestra los prox 7 dias)\n`/checar 3 dias`",
             action: 'ayuda'
         };
     }
@@ -149,23 +149,14 @@ class HelpStrategy extends CommandStrategy {
 class CreateStrategy extends CommandStrategy {
     parseEventArgs(args) {
         const parts = args.split('|').map(s => s.trim());
-        
-        if (parts.length < 2) {
-            return {
-                isValid: false,
-                message: "❌ **Faltan datos.**\n\nNecesito al menos el Título y la Fecha de Inicio.\nEj: `/agendar Cita | mañana 10am`"
-            };
-        }
+        if (parts.length < 2) return { isValid: false, message: "❌ **Faltan datos.**\nUsa: `/agendar Título | Fecha Inicio`" };
 
         const summary = parts[0];
         const startDateStr = parts[1];
-        
         if (!summary) return { isValid: false, message: "❌ El título no puede estar vacío." };
 
         const parsedStartDate = parseSpanishDate(startDateStr);
-        if (!parsedStartDate) {
-            return { isValid: false, message: `❌ No entendí la fecha de inicio: "${startDateStr}".` };
-        }
+        if (!parsedStartDate) return { isValid: false, message: `❌ No entendí la fecha de inicio: "${startDateStr}".` };
 
         let parsedEndDate = null;
         let optionalParamsStartIndex = 2;
@@ -179,13 +170,8 @@ class CreateStrategy extends CommandStrategy {
             } 
         }
 
-        if (!parsedEndDate) {
-            parsedEndDate = this.addOneHourSafe(parsedStartDate);
-        }
-
-        if (new Date(parsedStartDate) >= new Date(parsedEndDate)) {
-             return { isValid: false, message: "❌ La fecha de inicio debe ser anterior a la fecha de fin." };
-        }
+        if (!parsedEndDate) parsedEndDate = this.addOneHourSafe(parsedStartDate);
+        if (new Date(parsedStartDate) >= new Date(parsedEndDate)) return { isValid: false, message: "❌ La fecha de inicio debe ser anterior a la de fin." };
 
         let description, location;
         const attendees = [];
@@ -193,12 +179,9 @@ class CreateStrategy extends CommandStrategy {
         for (let i = optionalParamsStartIndex; i < parts.length; i++) {
             const part = parts[i];
             const lowerPart = part.toLowerCase();
-
-            if (lowerPart.startsWith('descripción:')) {
-                description = part.substring('descripción:'.length).trim();
-            } else if (lowerPart.startsWith('ubicación:')) {
-                location = part.substring('ubicación:'.length).trim();
-            } else if (lowerPart.startsWith('asistentes:')) {
+            if (lowerPart.startsWith('descripción:')) description = part.substring('descripción:'.length).trim();
+            else if (lowerPart.startsWith('ubicación:')) location = part.substring('ubicación:'.length).trim();
+            else if (lowerPart.startsWith('asistentes:')) {
                 const emailsStr = part.substring('asistentes:'.length).trim();
                 emailsStr.split(',').forEach(email => {
                     const trimmedEmail = email.trim();
@@ -207,19 +190,9 @@ class CreateStrategy extends CommandStrategy {
             }
         }
 
-        return {
-            isValid: true,
-            summary,
-            parsedStartDate,
-            parsedEndDate,
-            description: description || undefined,
-            location: location || undefined,
-            attendees: attendees.length > 0 ? attendees : undefined
-        };
+        return { isValid: true, summary, parsedStartDate, parsedEndDate, description: description || undefined, location: location || undefined, attendees: attendees.length > 0 ? attendees : undefined };
     }
-
     validate(args) { return this.parseEventArgs(args); }
-
     buildPayload(args, uid, validationResult) {
         const data = validationResult;
         const eventDetails = {
@@ -230,23 +203,18 @@ class CreateStrategy extends CommandStrategy {
         };
         if (data.location) eventDetails.location = data.location;
         if (data.attendees) eventDetails.attendees = data.attendees;
-
         return { firebaseUid: uid, eventDetails: eventDetails };
     }
 }
 
-// 2. MODIFICAR (Rediseñado)
+// 2. MODIFICAR
 class UpdateStrategy extends CommandStrategy {
     validate(args) {
         const parts = args.split('|').map(s => s.trim());
-        
-        if (parts.length < 2) {
-            return { isValid: false, message: "❌ **Faltan datos.**\nUsa: `/modificar Título | Nueva Inicio`" };
-        }
+        if (parts.length < 2) return { isValid: false, message: "❌ **Faltan datos.**\nUsa: `/modificar Título | Nueva Inicio`" };
         
         const searchTitle = parts[0];
         const startDateStr = parts[1];
-
         if (!searchTitle) return { isValid: false, message: "❌ Falta el título." };
 
         const parsedStartDate = parseSpanishDate(startDateStr);
@@ -264,18 +232,11 @@ class UpdateStrategy extends CommandStrategy {
             } 
         }
 
-        if (!parsedEndDate) {
-            parsedEndDate = this.addOneHourSafe(parsedStartDate);
-        }
-
-        if (new Date(parsedStartDate) >= new Date(parsedEndDate)) {
-             return { isValid: false, message: "❌ Inicio debe ser antes del fin." };
-        }
+        if (!parsedEndDate) parsedEndDate = this.addOneHourSafe(parsedStartDate);
+        if (new Date(parsedStartDate) >= new Date(parsedEndDate)) return { isValid: false, message: "❌ Inicio debe ser antes del fin." };
 
         let description, location;
         const attendees = [];
-        
-        // Soportamos agregar/cambiar extras en el update también
         for (let i = optionalParamsStartIndex; i < parts.length; i++) {
             const part = parts[i];
             const lowerPart = part.toLowerCase();
@@ -290,33 +251,18 @@ class UpdateStrategy extends CommandStrategy {
             }
         }
 
-        return { 
-            isValid: true, 
-            parsedStartDate, 
-            parsedEndDate, 
-            searchTitle,
-            description,
-            location,
-            attendees: attendees.length > 0 ? attendees : undefined
-        };
+        return { isValid: true, parsedStartDate, parsedEndDate, searchTitle, description, location, attendees: attendees.length > 0 ? attendees : undefined };
     }
-
     buildPayload(args, uid, validationResult) {
         const data = validationResult;
         const eventDetails = {
             start: { dateTime: data.parsedStartDate, timeZone: DEFAULT_TIMEZONE },
             end: { dateTime: data.parsedEndDate, timeZone: DEFAULT_TIMEZONE }
         };
-        // Opcionales
         if (data.description) eventDetails.description = data.description;
         if (data.location) eventDetails.location = data.location;
         if (data.attendees) eventDetails.attendees = data.attendees;
-
-        return {
-            firebaseUid: uid,
-            searchTitle: data.searchTitle,
-            eventDetails: eventDetails
-        };
+        return { firebaseUid: uid, searchTitle: data.searchTitle, eventDetails: eventDetails };
     }
 }
 
@@ -331,21 +277,68 @@ class DeleteStrategy extends CommandStrategy {
     }
 }
 
-// 4. CONSULTAR (Checar)
+// 4. CONSULTAR (ACTUALIZADO: Rango flexible)
 class CheckStrategy extends CommandStrategy {
-    validate(args) {
-        if (!args.trim()) return { isValid: false, message: "❌ **Falta la fecha.**\nEj: `/checar hoy`" };
-        
-        const parsedDate = parseSpanishDate(args.trim());
-        if (!parsedDate) return { isValid: false, message: "❌ No entendí la fecha." };
+    
+    // Helper para formatear ISO con timezone manual
+    formatISO(dateObj) {
+        const pad = (n) => n < 10 ? '0' + n : n;
+        // Ajustamos la fecha a Timezone MX manualmente (-6)
+        // Nota: Como estamos manipulando 'dateObj' que ya puede venir ajustado,
+        // usamos métodos UTC si la construimos manualmente o Intl.
+        const options = { timeZone: "America/Mexico_City", year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+        const formatter = new Intl.DateTimeFormat('en-CA', options);
+        const parts = formatter.formatToParts(dateObj);
+        const getPart = (type) => parts.find(p => p.type === type).value;
+        return `${getPart('year')}-${getPart('month')}-${getPart('day')}T${getPart('hour')}:${getPart('minute')}:${getPart('second')}-06:00`;
+    }
 
-        const baseDateString = parsedDate.substring(0, 10); // YYYY-MM-DD
+    validate(args) {
+        const text = args.trim().toLowerCase();
+        if (!text) return { isValid: false, message: "❌ **Falta el rango.**\nEj: `/checar hoy`, `/checar 1 semana`, `/checar 3 dias`" };
         
-        return { 
-            isValid: true, 
-            timeMin: `${baseDateString}T00:00:00-06:00`,
-            timeMax: `${baseDateString}T23:59:59-06:00`
-        };
+        const now = new Date();
+        let timeMin, timeMax;
+
+        // 1. DETECCIÓN DE RANGO: "1 semana", "2 dias"
+        // Regex: Numero + espacio + (dia/dias/semana/semanas)
+        const rangeRegex = /^(\d+)\s*(dias?|semanas?|mes(?:es)?)$/i;
+        const match = text.match(rangeRegex);
+
+        if (match) {
+            const quantity = parseInt(match[1]);
+            const unit = match[2];
+            
+            // timeMin es AHORA
+            timeMin = this.formatISO(now);
+            
+            // Calculamos timeMax
+            const endDate = new Date(now);
+            if (unit.startsWith('dia')) {
+                endDate.setDate(endDate.getDate() + quantity);
+            } else if (unit.startsWith('semana')) {
+                endDate.setDate(endDate.getDate() + (quantity * 7));
+            } else if (unit.startsWith('mes')) {
+                endDate.setMonth(endDate.getMonth() + quantity);
+            }
+            timeMax = this.formatISO(endDate);
+
+            return { isValid: true, timeMin, timeMax };
+        }
+
+        // 2. DETECCIÓN DE FECHA ESPECÍFICA (Lógica antigua "Hoy/Mañana/Fecha")
+        const parsedDateStr = parseSpanishDate(text);
+        if (parsedDateStr) {
+            // Si es fecha específica, mostramos ESE DÍA completo (00:00 a 23:59)
+            const baseDateString = parsedDateStr.substring(0, 10);
+            return { 
+                isValid: true, 
+                timeMin: `${baseDateString}T00:00:00-06:00`,
+                timeMax: `${baseDateString}T23:59:59-06:00`
+            };
+        }
+
+        return { isValid: false, message: "❌ No entendí el rango o fecha.\nIntenta: `/checar 1 semana` o `/checar hoy`" };
     }
 
     buildPayload(args, uid, validationResult) {
@@ -364,12 +357,10 @@ class CommandContext {
         this.chatId = msg.chat.id;
         this.firebaseUid = String(msg.chat.id); 
     }
-
     parse() {
         const lower = this.rawText.toLowerCase();
         if (lower === '/help' || lower.includes('ayuda')) return { action: 'help', args: '' };
         if (['hola', 'inicio', 'start'].some(w => lower.includes(w)) || lower === '/start') return { action: 'welcome', args: '' };
-
         if (this.rawText.startsWith('/')) {
             const clean = this.rawText.substring(1);
             const firstSpace = clean.indexOf(' ');
@@ -388,7 +379,7 @@ function getStrategy(action) {
         case 'agendar': return new CreateStrategy();
         case 'modificar': return new UpdateStrategy();
         case 'cancelar': return new DeleteStrategy();
-        case 'checar': return new CheckStrategy();
+        case 'checar': case 'listar': return new CheckStrategy(); // Soporta ambos
         default: return null;
     }
 }
@@ -401,14 +392,12 @@ catch (e) { msg = $input.item.json.message; }
 const context = new CommandContext(msg);
 const { action, args } = context.parse();
 const strategy = getStrategy(action);
-
 let result = { action, isValid: false, message: "", payload: {} };
 
 if (strategy) {
     const validation = strategy.validate(args);
     if (validation.isValid) {
         result.isValid = true;
-        // Si es bienvenida o ayuda, el action final cambia a español
         if (action === 'welcome' || action === 'help') {
             const strategyResult = strategy.buildPayload(args, context.firebaseUid);
             result.message = strategyResult.message;
@@ -420,12 +409,9 @@ if (strategy) {
         }
     } else {
         result.message = validation.message;
-        if (!result.message.includes('/help')) {
-            result.message += "\n\nEscribe `/help` para ver los formatos correctos.";
-        }
+        if (!result.message.includes('/help')) result.message += "\n\nEscribe `/help` para ver los formatos.";
     }
 } else {
-    result.message = "⚠️ No entendí tu comando. Escribe `/help` para ver los comandos disponibles.";
+    result.message = "⚠️ No entendí tu comando. Escribe `/help` para ayuda.";
 }
-
 return { json: result };
