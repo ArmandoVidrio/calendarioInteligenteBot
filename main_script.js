@@ -312,12 +312,11 @@ class DeleteStrategy extends CommandStrategy {
     }
 }
 
-// 4. CONSULTAR (ACTUALIZADO: "Desde ahora en adelante")
+// 4. CONSULTAR (CORREGIDO: Manejo estricto de "Hoy" y "Ahora")
 class CheckStrategy extends CommandStrategy {
     
-    // Helper para formatear ISO con timezone manual (-06:00)
-    formatISO(dateObj) {
-        // Usamos Intl para extraer las partes en la zona horaria correcta
+    // Helper para obtener string ISO con zona horaria MX (-06:00)
+    getMexicoISO(dateObj) {
         const options = { 
             timeZone: "America/Mexico_City", 
             year: 'numeric', month: '2-digit', day: '2-digit', 
@@ -336,10 +335,20 @@ class CheckStrategy extends CommandStrategy {
         if (!text) return { isValid: false, message: "❌ **Falta el rango.**\nEj: `/checar hoy`, `/checar 1 semana`" };
         
         const now = new Date();
-        const nowISO = this.formatISO(now); // Hora actual en formato MX
-        let timeMin, timeMax;
+        const nowISO = this.getMexicoISO(now); 
 
-        // 1. DETECCIÓN DE RANGO: "1 semana", "2 dias"
+        // 1. CASO ESPECIAL: "HOY" (Prioridad alta)
+        // Si el usuario dice "hoy", queremos desde AHORA MISMO hasta el final del día.
+        if (text === 'hoy') {
+            const todayDatePart = nowISO.split('T')[0]; // 2025-12-04
+            return { 
+                isValid: true, 
+                timeMin: nowISO, // Desde este segundo exacto
+                timeMax: `${todayDatePart}T23:59:59-06:00` // Hasta media noche
+            };
+        }
+
+        // 2. DETECCIÓN DE RANGO: "1 semana", "2 dias"
         const rangeRegex = /^(\d+)\s*(dias?|semanas?|mes(?:es)?)$/i;
         const match = text.match(rangeRegex);
 
@@ -347,8 +356,8 @@ class CheckStrategy extends CommandStrategy {
             const quantity = parseInt(match[1]);
             const unit = match[2];
             
-            // CAMBIO: timeMin ahora es AHORA MISMO (no el inicio del día)
-            timeMin = nowISO;
+            // timeMin es AHORA MISMO
+            const timeMin = nowISO;
             
             // Calculamos timeMax
             const endDate = new Date(now);
@@ -360,33 +369,24 @@ class CheckStrategy extends CommandStrategy {
                 endDate.setMonth(endDate.getMonth() + quantity);
             }
             
-            // Para el final del rango, sí queremos el final absoluto del día
-            const endISO = this.formatISO(endDate);
+            const endISO = this.getMexicoISO(endDate);
             const endDatePart = endISO.split('T')[0];
-            timeMax = `${endDatePart}T23:59:59-06:00`;
+            const timeMax = `${endDatePart}T23:59:59-06:00`; // Final del último día del rango
 
             return { isValid: true, timeMin, timeMax };
         }
 
-        // 2. DETECCIÓN DE FECHA ESPECÍFICA (Hoy/Mañana/Fecha)
+        // 3. DETECCIÓN DE FECHA ESPECÍFICA (Mañana, 4 de diciembre, etc.)
         const parsedDateStr = parseSpanishDate(text);
         if (parsedDateStr) {
-            const baseDateString = parsedDateStr.substring(0, 10); // YYYY-MM-DD del día pedido
-            const todayString = nowISO.substring(0, 10); // YYYY-MM-DD de hoy
-
-            // CAMBIO INTELIGENTE:
-            // Si el usuario pide "hoy" (o la fecha coincide con hoy), 
-            // empezamos desde la hora actual para no mostrar eventos pasados.
-            if (baseDateString === todayString) {
-                timeMin = nowISO;
-            } else {
-                // Si pide "mañana" u otro día, queremos ver desde las 00:00
-                timeMin = `${baseDateString}T00:00:00-06:00`;
-            }
-
-            timeMax = `${baseDateString}T23:59:59-06:00`;
-
-            return { isValid: true, timeMin, timeMax };
+            const baseDateString = parsedDateStr.substring(0, 10); // YYYY-MM-DD
+            
+            // Si es un día futuro o pasado específico, mostramos desde las 00:00
+            return { 
+                isValid: true, 
+                timeMin: `${baseDateString}T00:00:00-06:00`,
+                timeMax: `${baseDateString}T23:59:59-06:00`
+            };
         }
 
         return { isValid: false, message: "❌ No entendí el rango.\nIntenta: `/checar 1 semana` o `/checar hoy`" };
