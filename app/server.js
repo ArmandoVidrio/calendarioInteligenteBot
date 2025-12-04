@@ -169,64 +169,54 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
   if (!firebaseUid || !searchTitle || !eventDetails) {
     return res.status(400).send('Missing firebaseUid, searchTitle, or eventDetails.');
   }
-  // Aseguramos que searchTitle sea una cadena no vacía
+  
   if (typeof searchTitle !== 'string' || searchTitle.trim() === '') {
     return res.status(400).send('searchTitle must be a non-empty string.');
   }
 
+  // Auto-completar fecha de fin si falta (Lógica de servidor como respaldo)
   if (eventDetails.start && eventDetails.start.dateTime && (!eventDetails.end || !eventDetails.end.dateTime)) {
     const startDate = new Date(eventDetails.start.dateTime);
     if (!isNaN(startDate.getTime())) {
-      const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // Sumar 1 hora
+      const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // +1 hora
       eventDetails.end = {
         dateTime: endDate.toISOString(),
-        timeZone: eventDetails.start.timeZone || "America/Mexico_City" // Usa la zona horaria de inicio, o un default
+        timeZone: eventDetails.start.timeZone || "America/Mexico_City"
       };
     }
   }
 
-
   try {
-    // Aseguramos que firebaseUid sea una cadena
     const firebaseUidAsString = String(firebaseUid);
-
     const userDoc = await db.collection('users').doc(firebaseUidAsString).get();
     const refreshToken = userDoc.data()?.googleCalendarRefreshToken;
 
     if (!refreshToken) {
-      return res.status(404).send('User has not authorized Google Calendar or refresh token is missing.');
+      return res.status(404).send('User has not authorized Google Calendar.');
     }
 
     oauth2Client.setCredentials({ refresh_token: refreshToken });
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    // Determinar rango de búsqueda para eventos.list
-    let searchTimeMin, searchTimeMax;
-    const newEventStartDate = eventDetails.start?.dateTime ? new Date(eventDetails.start.dateTime) : null;
+    // --- CORRECCIÓN 1: RANGO DE BÚSQUEDA SIEMPRE BASADO EN "AHORA" ---
+    // No usamos la fecha del evento nuevo, porque si mueves un evento de 2023 a 2025,
+    // la búsqueda basada en 2025 no encontraría el original de 2023.
+    const now = new Date();
+    
+    const searchTimeMin = new Date(now);
+    searchTimeMin.setFullYear(now.getFullYear() - 1); // Buscar desde hace 1 año
+    
+    const searchTimeMax = new Date(now);
+    searchTimeMax.setFullYear(now.getFullYear() + 2); // Hasta dentro de 2 años
 
-    if (newEventStartDate && !isNaN(newEventStartDate.getTime())) {
-        // Buscar 1 año antes y 1 año después de la nueva fecha de inicio del evento
-        searchTimeMin = new Date(newEventStartDate);
-        searchTimeMin.setFullYear(searchTimeMin.getFullYear() - 1);
+    console.log(`Searching for "${searchTitle}" from ${searchTimeMin.toISOString()} to ${searchTimeMax.toISOString()}`);
 
-        searchTimeMax = new Date(newEventStartDate);
-        searchTimeMax.setFullYear(searchTimeMax.getFullYear() + 1);
-    } else {
-        // Fallback: buscar 1 año alrededor de la fecha actual si no se proporciona fecha específica
-        const now = new Date();
-        searchTimeMin = new Date(now);
-        searchTimeMin.setFullYear(now.getFullYear() - 1);
-        searchTimeMax = new Date(now);
-        searchTimeMax.setFullYear(now.getFullYear() + 1);
-    }
-
-    // Buscar eventos por título (q hace búsqueda de texto completo)
     const searchResponse = await calendar.events.list({
         calendarId: 'primary',
-        q: searchTitle, // Búsqueda de texto completo
+        q: searchTitle, 
         timeMin: searchTimeMin.toISOString(),
         timeMax: searchTimeMax.toISOString(),
-        singleEvents: true, // Expandir eventos recurrentes
+        singleEvents: true,
         orderBy: 'startTime'
     });
 
@@ -235,19 +225,27 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
 
     if (matchingEvents.length === 0) {
         return res.status(404).json({
-            message: `No events found with title containing "${searchTitle}" in the specified time range.`,
+            message: `No events found with title containing "${searchTitle}".`,
             searchTitle: searchTitle
         });
     }
 
-    // Filtrar por coincidencia EXACTA en el summary y actualizar
+    // Filtrar y Actualizar
     for (const event of matchingEvents) {
-        if (event.summary && event.summary.toLowerCase() === searchTitle.toLowerCase()) {
-            const updateResponse = await calendar.events.update({
+        // Normalizamos strings para comparar mejor
+        const eventSummary = (event.summary || "").trim().toLowerCase();
+        const targetTitle = searchTitle.trim().toLowerCase();
+
+        // Puedes usar 'includes' para ser más flexible o mantener '===' para exactitud
+        if (eventSummary === targetTitle) {
+            
+            // --- CORRECCIÓN 2: USAR PATCH EN LUGAR DE UPDATE ---
+            const updateResponse = await calendar.events.patch({ // <--- CAMBIO CLAVE
                 calendarId: 'primary',
                 eventId: event.id,
-                resource: eventDetails, // Esto fusionará los cambios con los datos existentes
+                resource: eventDetails, // Solo actualiza los campos enviados (ej. solo la hora)
             });
+            
             updatedEvents.push({
                 eventId: updateResponse.data.id,
                 eventLink: updateResponse.data.htmlLink,
@@ -259,12 +257,12 @@ app.put('/api/update-calendar-event', authenticateN8n, async (req, res) => {
 
     if (updatedEvents.length === 0) {
         return res.status(404).json({
-            message: `No exact matching events found with title "${searchTitle}" for update.`,
-            searchTitle: searchTitle
+            message: `Found events similar to "${searchTitle}" but none matched exactly.`,
+            foundSimilar: matchingEvents.map(e => e.summary)
         });
     }
 
-    console.log(`Updated ${updatedEvents.length} events for Firebase UID ${firebaseUidAsString} with title "${searchTitle}".`);
+    console.log(`Updated ${updatedEvents.length} events.`);
     res.status(200).json({
         message: `${updatedEvents.length} events updated successfully!`,
         updatedEvents: updatedEvents
