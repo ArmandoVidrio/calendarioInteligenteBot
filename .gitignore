@@ -1,2 +1,4 @@
-venv/
 .env
+credentials.json
+node_modules/
+.DB_Store
