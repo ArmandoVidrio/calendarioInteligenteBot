@@ -139,7 +139,42 @@ class HelpStrategy extends CommandStrategy {
     validate(args) { return { isValid: true }; }
     buildPayload(args, uid) {
         return {
-            message: "📘 **GUÍA DE USO**\n\n📅 **AGENDAR**\n`/agendar Título | Fecha Inicio`\n`/agendar Título | Inicio | Fin`\nExtras: `| Descripción: ...` `| Ubicación: ...`\n\n🔍 **MODIFICAR**\n`/modificar Título | Nueva Inicio`\n\n🗑️ **CANCELAR**\n`/cancelar Título Exacto`\n\n🗓️ **CHECAR AGENDA**\n`/checar hoy`\n`/checar mañana`\n`/checar 1 semana` (Muestra los prox 7 dias)\n`/checar 3 dias`",
+            message: "📘 **CENTRO DE AYUDA Y COMANDOS**\n\n" +
+                     "📅 **1. AGENDAR EVENTOS**\n" +
+                     "Tienes dos formas de crear eventos:\n" +
+                     "🔹 **Rápida (1 hora automática):**\n" +
+                     "`/agendar Título | Fecha Inicio`\n" +
+                     "Ej: `/agendar Gym | hoy a las 18:00`\n\n" +
+                     "🔹 **Completa (Inicio y Fin):**\n" +
+                     "`/agendar Título | Inicio | Fin`\n" +
+                     "Ej: `/agendar Reunión | mañana 9am | mañana 10:30am`\n\n" +
+                     "--------------------------------\n\n" +
+                     "🔍 **2. MODIFICAR EVENTOS**\n" +
+                     "Busca por título y cambia el horario:\n" +
+                     "🔹 **Rápida (Mover a nueva hora):**\n" +
+                     "`/modificar Título | Nueva Inicio`\n" +
+                     "Ej: `/modificar Gym | hoy 19:00`\n\n" +
+                     "🔹 **Completa (Cambiar todo):**\n" +
+                     "`/modificar Título | Inicio | Fin`\n\n" +
+                     "--------------------------------\n\n" +
+                     "✨ **3. OPCIONES EXTRAS**\n" +
+                     "Al Agendar o Modificar, agrega detalles al final con `|`:\n" +
+                     "📝 `| Descripción: nota del evento`\n" +
+                     "📍 `| Ubicación: lugar o link`\n" +
+                     "👥 `| Asistentes: correo1@gmail.com, correo2@hotmail.com`\n\n" +
+                     "💡 *Ejemplo Pro:*\n" +
+                     "`/agendar Cita Dr | viernes 16:00 | Ubicación: Clinica | Descripción: Llevar estudios`\n\n" +
+                     "--------------------------------\n\n" +
+                     "🗓️ **4. CONSULTAR AGENDA (NUEVO)**\n" +
+                     "Puedes ver tu agenda por día o por rango:\n" +
+                     "• `/checar hoy`\n" +
+                     "• `/checar mañana`\n" +
+                     "• `/checar 1 semana` (Próximos 7 días)\n" +
+                     "• `/checar 15 dias`\n" +
+                     "• `/checar 1 mes`\n\n" +
+                     "--------------------------------\n\n" +
+                     "🗑️ **5. CANCELAR**\n" +
+                     "`/cancelar Título Exacto`",
             action: 'ayuda'
         };
     }
