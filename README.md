@@ -101,7 +101,7 @@ Crea un nuevo evento en el calendario principal de Google del usuario.
 
 Modifica eventos existentes por título en el calendario principal de Google del usuario.
 
-*   **Descripción:** Busca uno o varios eventos que coincidan exactamente con el `searchTitle` proporcionado y actualiza sus detalles con la información en `eventDetails`.
+*   **Descripción:** Busca uno o varios eventos que coincidan exactamente con el `searchTitle` proporcionado y actualiza sus detalles con la información en `eventDetails`. Si no se proporciona una hora de finalización (`eventDetails.end.dateTime`), se asume por defecto una duración de 1 hora a partir de `eventDetails.start.dateTime`. **El título del evento (`summary`) no cambiará a menos que se incluya explícitamente en `eventDetails`**.
 *   **Método:** `PUT`
 *   **Request Body (JSON):**
     *   `firebaseUid` (string, requerido): El ID de Firebase del usuario.
@@ -117,11 +117,11 @@ Modifica eventos existentes por título en el calendario principal de Google del
           "dateTime": "2025-12-02T09:00:00-06:00",
           "timeZone": "America/Mexico_City"
         },
-        "end": {
+        "end": { // Opcional si solo hay 'start', se calculará por defecto +1h
           "dateTime": "2025-12-02T10:00:00-06:00",
           "timeZone": "America/Mexico_City"
-        },
-        "summary": "Nueva Llamada Demo (Actualizada)"
+        }
+        // No se incluye "summary", por lo tanto, el título original del evento se mantiene.
       }
     }
     ```
