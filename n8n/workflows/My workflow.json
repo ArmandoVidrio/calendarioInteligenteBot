@@ -26,7 +26,9 @@
                   }
                 ],
                 "combinator": "and"
-              }
+              },
+              "renameOutput": true,
+              "outputKey": "Caso exitoso"
             },
             {
               "conditions": {
@@ -43,13 +45,15 @@
                     "rightValue": "",
                     "operator": {
                       "type": "boolean",
-                      "operation": "true",
+                      "operation": "false",
                       "singleValue": true
                     }
                   }
                 ],
                 "combinator": "and"
-              }
+              },
+              "renameOutput": true,
+              "outputKey": "Caso de error"
             }
           ]
         },
@@ -58,33 +62,11 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -16,
-        -592
+        -64,
+        -624
       ],
       "id": "6091db18-00b5-4a5c-9690-ecd38328562a",
       "name": "Check Validity"
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Mensaje del usuario').item.json.message.chat.id }}",
-        "text": "={{ $json.message }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -32,
-        -224
-      ],
-      "id": "3d903bf2-def2-4159-a449-e0542c9e1ae1",
-      "name": "Send a text message1",
-      "webhookId": "43d94a43-ff05-404c-892d-b908dbfedf33",
-      "credentials": {
-        "telegramApi": {
-          "id": "hGdgY472BxhGGWi7",
-          "name": "Telegram account 2"
-        }
-      }
     },
     {
       "parameters": {
@@ -110,7 +92,9 @@
                   }
                 ],
                 "combinator": "and"
-              }
+              },
+              "renameOutput": true,
+              "outputKey": "Crear evento"
             },
             {
               "conditions": {
@@ -133,7 +117,9 @@
                   }
                 ],
                 "combinator": "and"
-              }
+              },
+              "renameOutput": true,
+              "outputKey": "Editar evento"
             },
             {
               "conditions": {
@@ -156,7 +142,9 @@
                   }
                 ],
                 "combinator": "and"
-              }
+              },
+              "renameOutput": true,
+              "outputKey": "Eliminar evento"
             },
             {
               "conditions": {
@@ -170,7 +158,7 @@
                   {
                     "id": "ca3d483a-7dfd-48f5-8e82-15a855e2906e",
                     "leftValue": "={{ $json.action }}",
-                    "rightValue": "listar",
+                    "rightValue": "checar",
                     "operator": {
                       "type": "string",
                       "operation": "equals",
@@ -179,7 +167,9 @@
                   }
                 ],
                 "combinator": "and"
-              }
+              },
+              "renameOutput": true,
+              "outputKey": "Consultar eventos"
             },
             {
               "conditions": {
@@ -193,7 +183,7 @@
                   {
                     "id": "03204602-fb43-4bed-94b9-ad5a1765df14",
                     "leftValue": "={{ $json.action }}",
-                    "rightValue": "start",
+                    "rightValue": "bienvenida",
                     "operator": {
                       "type": "string",
                       "operation": "equals",
@@ -202,7 +192,33 @@
                   }
                 ],
                 "combinator": "and"
-              }
+              },
+              "renameOutput": true,
+              "outputKey": "bienvenida"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2efdd538-2ae8-4ff6-9d83-1d51fa82cec0",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "ayuda",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ayuda"
             }
           ]
         },
@@ -216,132 +232,6 @@
       ],
       "id": "b08eb50a-4162-4d9f-888c-f458e235b824",
       "name": "Action Router"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/create-calendar-event",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.payload }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        592,
-        -976
-      ],
-      "id": "a5e2cc58-63d6-4166-aa32-d3040f2dffa5",
-      "name": "HTTP Request1",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "gw3BYlZGE3u2X5zw",
-          "name": "GoogleCalendarAPIKey"
-        }
-      },
-      "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "method": "PUT",
-        "url": "https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/update-calendar-event",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.payload }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        592,
-        -768
-      ],
-      "id": "74353ca9-7ccc-4060-af8e-e37a6325ac21",
-      "name": "HTTP Request2",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "gw3BYlZGE3u2X5zw",
-          "name": "GoogleCalendarAPIKey"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "DELETE",
-        "url": "https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/delete-calendar-event",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.payload }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        592,
-        -576
-      ],
-      "id": "d3a2372f-c1ef-4f91-9405-66c24dfe2295",
-      "name": "HTTP Request3",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "gw3BYlZGE3u2X5zw",
-          "name": "GoogleCalendarAPIKey"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "url": "https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/check-event-at-time",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.payload }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        592,
-        -368
-      ],
-      "id": "25fcd7d8-b671-4877-bc5e-ca0cc742af3c",
-      "name": "HTTP Request4",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "gw3BYlZGE3u2X5zw",
-          "name": "GoogleCalendarAPIKey"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Mensaje del usuario').item.json.message.chat.id }}",
-        "text": "=✅ Evento Creado: {{ $json.eventLink }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        880,
-        -976
-      ],
-      "id": "95ef5334-32ab-4845-9081-f99674de09e1",
-      "name": "Send a text message2",
-      "webhookId": "98536582-1105-4149-9a17-c5147f24d263",
-      "credentials": {
-        "telegramApi": {
-          "id": "hGdgY472BxhGGWi7",
-          "name": "Telegram account 2"
-        }
-      }
     },
     {
       "parameters": {
@@ -367,43 +257,8 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * ---------------------------------------------------------\n * CONFIGURACIÓN\n * ---------------------------------------------------------\n */\nconst DEFAULT_TIMEZONE = \"America/Mexico_City\"; \n\n/**\n * ---------------------------------------------------------\n * UTILIDAD: PARSER DE FECHAS EN ESPAÑOL\n * Convierte \"16 de septiembre a las 13:30\" -> Date Object\n * ---------------------------------------------------------\n */\nfunction parseSpanishDate(text) {\n    const months = {\n        'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,\n        'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11\n    };\n\n    const currentYear = new Date().getFullYear();\n    const lowerText = text.toLowerCase();\n\n    // Regex para: \"16 de septiembre\" ó \"16 de septiembre del 2025\"\n    // Captura: Dia, Mes, Año (Opcional), Hora (Opcional)\n    // Ej: \"16 de septiembre a las 13:30\"\n    const regex = /(\\d{1,2})\\s+de\\s+([a-záéíóú]+)(?:\\s+del?\\s+(\\d{4}))?(?:\\s+a\\s+las\\s+(\\d{1,2})(?::(\\d{2}))?)?/i;\n    const match = lowerText.match(regex);\n\n    if (match) {\n        const day = parseInt(match[1]);\n        const monthName = match[2];\n        const year = match[3] ? parseInt(match[3]) : currentYear;\n        const hour = match[4] ? parseInt(match[4]) : 9; // Si no pone hora, default 9am\n        const minute = match[5] ? parseInt(match[5]) : 0;\n\n        if (months[monthName] !== undefined) {\n            const date = new Date(year, months[monthName], day, hour, minute);\n            // Ajustamos a ISO String\n            return date.toISOString().split('.')[0] + \"-06:00\"; // Ajuste manual offset México\n        }\n    }\n    \n    // Si no es fecha en español, intentamos formato ISO estándar por si acaso\n    const isoDate = new Date(text);\n    if (!isNaN(isoDate.getTime())) {\n        return isoDate.toISOString().split('.')[0] + \"-06:00\";\n    }\n\n    return null;\n}\n\n/**\n * ---------------------------------------------------------\n * ESTRATEGIAS (Lógica de Negocio)\n * ---------------------------------------------------------\n */\nclass CommandStrategy {\n    validate(args) { return { isValid: false, message: \"Error interno\" }; }\n    buildPayload(args, uid) { return {}; }\n}\n\n// 0. BIENVENIDA\nclass WelcomeStrategy extends CommandStrategy {\n    validate(args) { return { isValid: true }; }\n    buildPayload(args, uid) { return {}; }\n}\n\n// 1. CREAR (Agendar con fecha natural)\nclass CreateStrategy extends CommandStrategy {\n    validate(args) {\n        // Acepta: \"Dentista | 16 de septiembre a las 13:30\"\n        const parts = args.split('|');\n        if (parts.length < 2) {\n            return { \n                isValid: false, \n                message: \"❌ **Falta información.**\\n\\nIntenta así (en español):\\n`/agendar Título | Día de Mes a las Hora:Min`\\n\\nEjemplo:\\n`/agendar Cita Dentista | 16 de septiembre a las 13:30`\" \n            };\n        }\n        \n        const dateStr = parts[1].trim();\n        const parsedDate = parseSpanishDate(dateStr);\n\n        if (!parsedDate) {\n            return { isValid: false, message: \"❌ **No entendí la fecha.**\\n\\nAsegúrate de escribir bien el mes (ej: '16 de septiembre').\" };\n        }\n\n        return { isValid: true, parsedDate: parsedDate }; // Pasamos la fecha ya limpia\n    }\n\n    buildPayload(args, uid, validationResult) {\n        const parts = args.split('|');\n        const summary = parts[0].trim();\n        const startDate = new Date(validationResult.parsedDate); // Usamos la fecha que ya limpiamos\n        const endDate = new Date(startDate.getTime() + 60 * 60000); // +1 hora\n\n        return {\n            firebaseUid: uid,\n            eventDetails: {\n                summary: summary,\n                description: \"Creado desde Telegram\",\n                start: { dateTime: startDate.toISOString(), timeZone: DEFAULT_TIMEZONE },\n                end: { dateTime: endDate.toISOString(), timeZone: DEFAULT_TIMEZONE }\n            }\n        };\n    }\n}\n\n// 2. MODIFICAR (Por Título en vez de ID)\nclass UpdateStrategy extends CommandStrategy {\n    validate(args) {\n        // Ahora acepta: \"Dentista | Nueva fecha\"\n        // OJO: Asumimos que buscaremos por nombre\n        const parts = args.split('|');\n        if (parts.length < 2) {\n            return { isValid: false, message: \"❌ **Faltan datos.**\\n\\nUsa: `/modificar Título Exacto | Nueva Fecha`\" };\n        }\n        \n        const dateStr = parts[1].trim();\n        const parsedDate = parseSpanishDate(dateStr);\n        if (!parsedDate) return { isValid: false, message: \"❌ Fecha inválida.\" };\n\n        return { isValid: true, parsedDate: parsedDate };\n    }\n\n    buildPayload(args, uid, validationResult) {\n        const parts = args.split('|');\n        // MANDAMOS \"searchTitle\" en lugar de \"eventId\" \n        // (Tu amigo tendrá que adaptar su API para buscar por nombre o tú hacer un paso previo)\n        return {\n            firebaseUid: uid,\n            searchTitle: parts[0].trim(), // <--- CAMBIO IMPORTANTE\n            eventDetails: {\n                start: { dateTime: validationResult.parsedDate, timeZone: DEFAULT_TIMEZONE }\n            }\n        };\n    }\n}\n\n// 3. BORRAR (Por Título en vez de ID)\nclass DeleteStrategy extends CommandStrategy {\n    validate(args) {\n        if (!args.trim()) return { isValid: false, message: \"❌ **Falta el nombre.**\\n\\nUsa: `/cancelar Título del Evento`\\nEj: `/cancelar Dentista`\" };\n        return { isValid: true };\n    }\n\n    buildPayload(args, uid) {\n        // Mandamos el título para que el backend busque y borre\n        return {\n            firebaseUid: uid,\n            searchTitle: args.trim() // <--- CAMBIO IMPORTANTE\n        };\n    }\n}\n\n// 4. CHECAR (Solo por día)\nclass CheckStrategy extends CommandStrategy {\n    validate(args) {\n        // Acepta: \"16 de septiembre\" (sin hora)\n        if (!args.trim()) return { isValid: false, message: \"❌ **Falta la fecha.**\\n\\nEj: `/checar 16 de septiembre`\" };\n        \n        const parsedDate = parseSpanishDate(args.trim());\n        if (!parsedDate) return { isValid: false, message: \"❌ No entendí la fecha.\" };\n\n        return { isValid: true, parsedDate: parsedDate };\n    }\n\n    buildPayload(args, uid, validationResult) {\n        // Al checar, enviamos la fecha con hora 00:00 o la que detecte\n        return {\n            firebaseUid: uid,\n            queryTime: validationResult.parsedDate,\n            durationMinutes: 60\n        };\n    }\n}\n\n// --- FACTORY & PARSER ---\nclass CommandContext {\n    constructor(msg) {\n        this.rawText = (msg.text || \"\").trim();\n        this.chatId = msg.chat.id;\n        this.firebaseUid = `telegram-${this.chatId}`; \n    }\n\n    parse() {\n        const lower = this.rawText.toLowerCase();\n        \n        // Saludos\n        if (['hola', 'inicio', 'start', 'ayuda'].some(w => lower.includes(w)) || lower === '/start') {\n            return { action: 'start', args: '' };\n        }\n\n        // Comandos\n        if (this.rawText.startsWith('/')) {\n            const clean = this.rawText.substring(1);\n            const firstSpace = clean.indexOf(' ');\n            const action = firstSpace === -1 ? clean : clean.substring(0, firstSpace);\n            const args = firstSpace === -1 ? \"\" : clean.substring(firstSpace + 1);\n            return { action: action.toLowerCase(), args };\n        }\n        return { action: 'unknown', args: '' };\n    }\n}\n\nfunction getStrategy(action) {\n    switch (action) {\n        case 'start': return new WelcomeStrategy();\n        case 'agendar': return new CreateStrategy();\n        case 'modificar': return new UpdateStrategy();\n        case 'cancelar': return new DeleteStrategy();\n        case 'checar': return new CheckStrategy(); // Antes listar\n        default: return null;\n    }\n}\n\n// --- MAIN ---\nlet msg;\ntry { msg = $('Mensaje del usuario').item.json.message; } \ncatch (e) { msg = $input.item.json.message; }\n\nconst context = new CommandContext(msg);\nconst { action, args } = context.parse();\nconst strategy = getStrategy(action);\n\nlet result = { action, isValid: false, message: \"\", payload: {} };\n\nif (action === 'start') {\n    result.isValid = true;\n    result.message = \"👋 **¡Hola!**\\n\\nPuedes escribirme naturalmente:\\n\\n📅 `/agendar Cita Dentista | 16 de septiembre a las 10:00`\\n🔍 `/checar 16 de septiembre`\\n🗑️ `/cancelar Cita Dentista`\";\n    return { json: result };\n}\n\nif (strategy) {\n    const validation = strategy.validate(args);\n    if (validation.isValid) {\n        result.isValid = true;\n        result.message = \"Procesando...\";\n        // Pasamos el resultado de la validación (fecha limpia) al payload\n        result.payload = strategy.buildPayload(args, context.firebaseUid, validation);\n    } else {\n        result.message = validation.message;\n    }\n} else {\n    result.message = \"⚠️ No entendí. Intenta: `/agendar Título | Fecha`\";\n}\n\nreturn { json: result };"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -224,
-        -592
-      ],
-      "id": "bda905c8-b166-4b8f-9b25-8996982ccfd2",
-      "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
         "chatId": "={{ $('Mensaje del usuario').item.json.message.chat.id }}",
-        "text": "={{ $json.message }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        592,
-        -144
-      ],
-      "id": "ff116803-c532-4488-83bc-89533ac9d7a6",
-      "name": "Send a text message4",
-      "webhookId": "e560c001-80d0-4c17-b8da-8e003a1bedbd",
-      "credentials": {
-        "telegramApi": {
-          "id": "hGdgY472BxhGGWi7",
-          "name": "Telegram account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Mensaje del usuario').item.json.message.chat.id }}",
-        "text": "=✅ Evento Modificado: {{ $json.eventLink }}",
+        "text": "=✅ Evento Modificado: {{ $json.updatedEvents[0].eventLink }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
@@ -446,48 +301,6 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Mensaje del usuario').item.json.message.chat.id }}",
-        "text": "=Aqui esta tu link para iniciar sesion en google:",
-        "replyMarkup": "=inlineKeyboard",
-        "forceReply": {},
-        "inlineKeyboard": {
-          "rows": [
-            {
-              "row": {
-                "buttons": [
-                  {
-                    "text": "Iniciar sesión",
-                    "additionalFields": {
-                      "url": "={{ $json[\"login_url\"] }}"
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        "replyKeyboardOptions": {},
-        "replyKeyboardRemove": {},
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -224,
-        -848
-      ],
-      "id": "af8c7ee4-61e0-4656-adc5-3eca3fc68f96",
-      "name": "Send a text message7",
-      "webhookId": "f987d3f8-3b0b-4f92-8a49-9037c579ec2c",
-      "credentials": {
-        "telegramApi": {
-          "id": "hGdgY472BxhGGWi7",
-          "name": "Telegram account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
         "updates": [
           "message"
         ],
@@ -511,7 +324,7 @@
     },
     {
       "parameters": {
-        "url": "=https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/auth/initiate-google-calendar-auth?telegramUserId={{ $json.message.chat.id }}",
+        "url": "=https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/user-exists?firebaseUid={{ $json.message.chat.id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -533,6 +346,107 @@
     },
     {
       "parameters": {
+        "content": "Si el usuario no esta autenticado, se debe de autenticar y la siguiente vez que mande mensaje ya estara autenticado sin la necesidad de caer en este flujo de nuevo"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        -208
+      ],
+      "id": "38be55f7-455e-46be-99ae-f0040245b9a3",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "url": "=https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/auth/initiate-google-calendar-auth?telegramUserId={{ $('Mensaje del usuario').item.json.message.chat.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -480,
+        -384
+      ],
+      "id": "00b38a7f-0d16-4326-b298-f1af5b83628d",
+      "name": "Autenticar usuario",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "gw3BYlZGE3u2X5zw",
+          "name": "GoogleCalendarAPIKey"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Mensaje del usuario').item.json.message.chat.id }}",
+        "text": "Por favor inicia sesión en tu cuenta de Google y acepta los permisos.",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Iniciar sesión",
+                    "additionalFields": {
+                      "url": "={{ $json.login_url }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -272,
+        -384
+      ],
+      "id": "fc4b0d19-400b-43ed-964e-d9f84643d855",
+      "name": "Send a text message",
+      "webhookId": "d62f4c99-4e71-4316-9eba-9f27368b5c2f",
+      "credentials": {
+        "telegramApi": {
+          "id": "hGdgY472BxhGGWi7",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/create-calendar-event",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.payload }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        576,
+        -976
+      ],
+      "id": "a5e2cc58-63d6-4166-aa32-d3040f2dffa5",
+      "name": "Crear evento en calendario",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "gw3BYlZGE3u2X5zw",
+          "name": "GoogleCalendarAPIKey"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -543,7 +457,7 @@
           "conditions": [
             {
               "id": "ada035ac-9082-40c8-972b-24e8e0a2c6a6",
-              "leftValue": "={{ $json.authenticated }}",
+              "leftValue": "={{ $json.exists }}",
               "rightValue": "",
               "operator": {
                 "type": "boolean",
@@ -563,20 +477,199 @@
         -608
       ],
       "id": "2fa0178d-edef-42e0-88a0-0fde38252f4a",
-      "name": "If authenticated"
+      "name": "autenticado?"
     },
     {
       "parameters": {
-        "content": "Hace falta modificar el flujo de si no esta autenticado"
+        "method": "PUT",
+        "url": "https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/update-calendar-event",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.payload }}",
+        "options": {}
       },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
       "position": [
-        -544,
-        -944
+        576,
+        -768
       ],
-      "id": "38be55f7-455e-46be-99ae-f0040245b9a3",
-      "name": "Sticky Note"
+      "id": "74353ca9-7ccc-4060-af8e-e37a6325ac21",
+      "name": "Editar evento",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "gw3BYlZGE3u2X5zw",
+          "name": "GoogleCalendarAPIKey"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/delete-calendar-event",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.payload }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        576,
+        -576
+      ],
+      "id": "d3a2372f-c1ef-4f91-9405-66c24dfe2295",
+      "name": "Eliminar evento",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "gw3BYlZGE3u2X5zw",
+          "name": "GoogleCalendarAPIKey"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://google-auth-server-ds--telegram-bot-ac92a.us-central1.hosted.app/api/list-events-by-time",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "firebaseUid",
+              "value": "={{ $json.payload.firebaseUid }}"
+            },
+            {
+              "name": "timeMin",
+              "value": "={{ $json.payload.timeMin }}"
+            },
+            {
+              "name": "timeMax",
+              "value": "={{ $json.payload.timeMax }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        576,
+        -368
+      ],
+      "id": "25fcd7d8-b671-4877-bc5e-ca0cc742af3c",
+      "name": "Mostrar eventos",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "gw3BYlZGE3u2X5zw",
+          "name": "GoogleCalendarAPIKey"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Mensaje del usuario').item.json.message.chat.id }}",
+        "text": "=✅ Evento Creado: {{ $json.eventLink }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        -976
+      ],
+      "id": "95ef5334-32ab-4845-9081-f99674de09e1",
+      "name": "Mensaje de creacion exitosa",
+      "webhookId": "98536582-1105-4149-9a17-c5147f24d263",
+      "credentials": {
+        "telegramApi": {
+          "id": "hGdgY472BxhGGWi7",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Mensaje del usuario').item.json.message.chat.id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        144,
+        -336
+      ],
+      "id": "3d903bf2-def2-4159-a449-e0542c9e1ae1",
+      "name": "Enviar mensaje de error",
+      "webhookId": "43d94a43-ff05-404c-892d-b908dbfedf33",
+      "credentials": {
+        "telegramApi": {
+          "id": "hGdgY472BxhGGWi7",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Mensaje del usuario').item.json.message.chat.id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        576,
+        -144
+      ],
+      "id": "ff116803-c532-4488-83bc-89533ac9d7a6",
+      "name": "Mensaje de bienvenida",
+      "webhookId": "e560c001-80d0-4c17-b8da-8e003a1bedbd",
+      "credentials": {
+        "telegramApi": {
+          "id": "hGdgY472BxhGGWi7",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Mensaje del usuario').item.json.message.chat.id }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        576,
+        48
+      ],
+      "id": "0d2f7519-be85-4692-9fe1-478bcce2f531",
+      "name": "Mensaje de ayuda",
+      "webhookId": "e560c001-80d0-4c17-b8da-8e003a1bedbd",
+      "credentials": {
+        "telegramApi": {
+          "id": "hGdgY472BxhGGWi7",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * ---------------------------------------------------------\n * CONFIGURACIÓN\n * ---------------------------------------------------------\n */\nconst DEFAULT_TIMEZONE = \"America/Mexico_City\";\n\n/**\n * ---------------------------------------------------------\n * UTILIDAD: PARSER ROBUSTO CON TIMEZONE FIJO (MÉXICO)\n * ---------------------------------------------------------\n */\nfunction parseSpanishDate(text) {\n    const months = {\n        'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,\n        'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11\n    };\n    \n    const pad = (n) => n < 10 ? '0' + n : n;\n\n    const lowerText = text.toLowerCase().trim();\n    const now = new Date(); \n    \n    let year, monthIdx, day, hour, minute;\n    let yearExplicitlyProvided = false;\n\n    // A. DETECCIÓN DE FECHA RELATIVA (HOY / MAÑANA)\n    if (lowerText.includes('mañana') || lowerText.includes('hoy')) {\n        const offsetMexico = -6 * 60; \n        const nowMexico = new Date(now.getTime() + (offsetMexico * 60 * 1000));\n        \n        const daysToAdd = lowerText.includes('mañana') ? 1 : 0;\n        nowMexico.setDate(nowMexico.getDate() + daysToAdd);\n\n        year = nowMexico.getUTCFullYear();\n        monthIdx = nowMexico.getUTCMonth();\n        day = nowMexico.getUTCDate();\n\n        const timeRegex = /(?:a\\s+las?|at|\\s)\\s*(\\d{1,2})(?:[:\\.](\\d{2}))?\\s*(am|pm)?/i;\n        const timeMatch = lowerText.match(timeRegex);\n\n        hour = 9; minute = 0; // Default\n        if (timeMatch) {\n            hour = parseInt(timeMatch[1]);\n            minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;\n            const ampm = timeMatch[3];\n            if (ampm === 'pm' && hour < 12) hour += 12;\n            if (ampm === 'am' && hour === 12) hour = 0;\n        } else if (lowerText.includes('hoy')) {\n            hour = nowMexico.getUTCHours() + 1; \n        }\n\n    } else {\n        // B. DETECCIÓN DE FECHA ESPECÍFICA\n        const regex = /(\\d{1,2})\\s+de\\s+([a-záéíóú]+)(?:\\s+del?\\s+(\\d{4}))?(?:[\\s,]+(?:a\\s+las?|a\\s+la|at)?\\s*(\\d{1,2})(?:[:\\.](\\d{2}))?\\s*(am|pm)?)?/i;\n        const match = lowerText.match(regex);\n\n        if (!match) {\n            const isoDate = new Date(text);\n            if (!isNaN(isoDate.getTime())) {\n                return isoDate.toISOString().split('.')[0] + \"-06:00\";\n            }\n            return null; \n        }\n\n        day = parseInt(match[1]);\n        const monthName = match[2];\n        \n        if (months[monthName] === undefined) return null;\n        monthIdx = months[monthName];\n\n        if (match[3]) {\n            year = parseInt(match[3]);\n            yearExplicitlyProvided = true;\n        } else {\n            year = new Date().getFullYear();\n        }\n\n        hour = 9; minute = 0;\n        if (match[4]) {\n            hour = parseInt(match[4]);\n            minute = match[5] ? parseInt(match[5]) : 0;\n            const ampm = match[6];\n            if (ampm === 'pm' && hour < 12) hour += 12;\n            if (ampm === 'am' && hour === 12) hour = 0;\n        }\n    }\n\n    let isoString = `${year}-${pad(monthIdx + 1)}-${pad(day)}T${pad(hour)}:${pad(minute)}:00-06:00`;\n    let parsedDate = new Date(isoString);\n\n    if (!yearExplicitlyProvided && parsedDate < now) {\n        year += 1;\n        isoString = `${year}-${pad(monthIdx + 1)}-${pad(day)}T${pad(hour)}:${pad(minute)}:00-06:00`;\n    }\n\n    return isoString;\n}\n\n/**\n * ---------------------------------------------------------\n * ESTRATEGIAS\n * ---------------------------------------------------------\n */\nclass CommandStrategy {\n    validate(args) { return { isValid: false, message: \"Error interno\" }; }\n    buildPayload(args, uid) { return {}; }\n    \n    // Helper compartido para sumar 1 hora seguro en MX\n    addOneHourSafe(isoDateString) {\n        const date = new Date(isoDateString);\n        date.setHours(date.getHours() + 1);\n        const options = { \n            timeZone: \"America/Mexico_City\", \n            year: 'numeric', month: '2-digit', day: '2-digit', \n            hour: '2-digit', minute: '2-digit', second: '2-digit', \n            hour12: false \n        };\n        const formatter = new Intl.DateTimeFormat('en-CA', options); \n        const parts = formatter.formatToParts(date);\n        const getPart = (type) => parts.find(p => p.type === type).value;\n        return `${getPart('year')}-${getPart('month')}-${getPart('day')}T${getPart('hour')}:${getPart('minute')}:${getPart('second')}-06:00`;\n    }\n}\n\n// 0. BIENVENIDA\nclass WelcomeStrategy extends CommandStrategy {\n    validate(args) { return { isValid: true }; }\n    buildPayload(args, uid) {\n        return {\n            message: \"👋 ¡Hola! Soy tu asistente de calendario.\\n\\n⚡ **Comando Rápido:**\\n`/agendar Título | Fecha Inicio`\\n_(Se creará un evento de 1 hora automáticamente)_\\n\\nComandos disponibles:\\n📅 `/agendar` - Crear eventos\\n🔍 `/modificar` - Cambiar horario\\n🗑️ `/cancelar` - Borrar eventos\\n🗓️ `/checar` - Ver agenda\\n\\nEscribe `/help` para ver todos los detalles.\",\n            action: 'bienvenida' \n        };\n    }\n}\n\n// AYUDA\nclass HelpStrategy extends CommandStrategy {\n    validate(args) { return { isValid: true }; }\n    buildPayload(args, uid) {\n        return {\n            message: \"📘 **CENTRO DE AYUDA Y COMANDOS**\\n\\n\" +\n                     \"📅 **1. AGENDAR EVENTOS**\\n\" +\n                     \"Tienes dos formas de crear eventos:\\n\" +\n                     \"🔹 **Rápida (1 hora automática):**\\n\" +\n                     \"`/agendar Título | Fecha Inicio`\\n\" +\n                     \"Ej: `/agendar Gym | hoy a las 18:00`\\n\\n\" +\n                     \"🔹 **Completa (Inicio y Fin):**\\n\" +\n                     \"`/agendar Título | Inicio | Fin`\\n\" +\n                     \"Ej: `/agendar Reunión | mañana 9am | mañana 10:30am`\\n\\n\" +\n                     \"--------------------------------\\n\\n\" +\n                     \"🔍 **2. MODIFICAR EVENTOS**\\n\" +\n                     \"Busca por título y cambia el horario:\\n\" +\n                     \"🔹 **Rápida (Mover a nueva hora):**\\n\" +\n                     \"`/modificar Título | Nueva Inicio`\\n\" +\n                     \"Ej: `/modificar Gym | hoy 19:00`\\n\\n\" +\n                     \"🔹 **Completa (Cambiar todo):**\\n\" +\n                     \"`/modificar Título | Inicio | Fin`\\n\\n\" +\n                     \"--------------------------------\\n\\n\" +\n                     \"✨ **3. OPCIONES EXTRAS**\\n\" +\n                     \"Al Agendar o Modificar, agrega detalles al final con `|`:\\n\" +\n                     \"📝 `| Descripción: nota del evento`\\n\" +\n                     \"📍 `| Ubicación: lugar o link`\\n\" +\n                     \"👥 `| Asistentes: correo1@gmail.com, correo2@hotmail.com`\\n\\n\" +\n                     \"💡 *Ejemplo Pro:*\\n\" +\n                     \"`/agendar Cita Dr | viernes 16:00 | Ubicación: Clinica | Descripción: Llevar estudios`\\n\\n\" +\n                     \"--------------------------------\\n\\n\" +\n                     \"🗓️ **4. CONSULTAR AGENDA (NUEVO)**\\n\" +\n                     \"Puedes ver tu agenda por día o por rango:\\n\" +\n                     \"• `/checar hoy`\\n\" +\n                     \"• `/checar mañana`\\n\" +\n                     \"• `/checar 1 semana` (Próximos 7 días)\\n\" +\n                     \"• `/checar 15 dias`\\n\" +\n                     \"• `/checar 1 mes`\\n\\n\" +\n                     \"--------------------------------\\n\\n\" +\n                     \"🗑️ **5. CANCELAR**\\n\" +\n                     \"`/cancelar Título Exacto`\",\n            action: 'ayuda'\n        };\n    }\n}\n\n// 1. CREAR (Agendar)\nclass CreateStrategy extends CommandStrategy {\n    parseEventArgs(args) {\n        const parts = args.split('|').map(s => s.trim());\n        if (parts.length < 2) return { isValid: false, message: \"❌ **Faltan datos.**\\nUsa: `/agendar Título | Fecha Inicio`\" };\n\n        const summary = parts[0];\n        const startDateStr = parts[1];\n        if (!summary) return { isValid: false, message: \"❌ El título no puede estar vacío.\" };\n\n        const parsedStartDate = parseSpanishDate(startDateStr);\n        if (!parsedStartDate) return { isValid: false, message: `❌ No entendí la fecha de inicio: \"${startDateStr}\".` };\n\n        let parsedEndDate = null;\n        let optionalParamsStartIndex = 2;\n\n        if (parts.length > 2) {\n            const possibleEndDateStr = parts[2];\n            const possibleEndDate = parseSpanishDate(possibleEndDateStr);\n            if (possibleEndDate) {\n                parsedEndDate = possibleEndDate;\n                optionalParamsStartIndex = 3;\n            } \n        }\n\n        if (!parsedEndDate) parsedEndDate = this.addOneHourSafe(parsedStartDate);\n        if (new Date(parsedStartDate) >= new Date(parsedEndDate)) return { isValid: false, message: \"❌ La fecha de inicio debe ser anterior a la de fin.\" };\n\n        let description, location;\n        const attendees = [];\n\n        for (let i = optionalParamsStartIndex; i < parts.length; i++) {\n            const part = parts[i];\n            const lowerPart = part.toLowerCase();\n            if (lowerPart.startsWith('descripción:')) description = part.substring('descripción:'.length).trim();\n            else if (lowerPart.startsWith('ubicación:')) location = part.substring('ubicación:'.length).trim();\n            else if (lowerPart.startsWith('asistentes:')) {\n                const emailsStr = part.substring('asistentes:'.length).trim();\n                emailsStr.split(',').forEach(email => {\n                    const trimmedEmail = email.trim();\n                    if (trimmedEmail) attendees.push({ email: trimmedEmail });\n                });\n            }\n        }\n\n        return { isValid: true, summary, parsedStartDate, parsedEndDate, description: description || undefined, location: location || undefined, attendees: attendees.length > 0 ? attendees : undefined };\n    }\n    validate(args) { return this.parseEventArgs(args); }\n    buildPayload(args, uid, validationResult) {\n        const data = validationResult;\n        const eventDetails = {\n            summary: data.summary,\n            description: data.description || \"Creado desde Telegram\",\n            start: { dateTime: data.parsedStartDate, timeZone: DEFAULT_TIMEZONE },\n            end: { dateTime: data.parsedEndDate, timeZone: DEFAULT_TIMEZONE }\n        };\n        if (data.location) eventDetails.location = data.location;\n        if (data.attendees) eventDetails.attendees = data.attendees;\n        return { firebaseUid: uid, eventDetails: eventDetails };\n    }\n}\n\n// 2. MODIFICAR\nclass UpdateStrategy extends CommandStrategy {\n    validate(args) {\n        const parts = args.split('|').map(s => s.trim());\n        if (parts.length < 2) return { isValid: false, message: \"❌ **Faltan datos.**\\nUsa: `/modificar Título | Nueva Inicio`\" };\n        \n        const searchTitle = parts[0];\n        const startDateStr = parts[1];\n        if (!searchTitle) return { isValid: false, message: \"❌ Falta el título.\" };\n\n        const parsedStartDate = parseSpanishDate(startDateStr);\n        if (!parsedStartDate) return { isValid: false, message: \"❌ Nueva fecha de inicio inválida.\" };\n\n        let parsedEndDate = null;\n        let optionalParamsStartIndex = 2;\n\n        if (parts.length > 2) {\n            const possibleEndDateStr = parts[2];\n            const possibleEndDate = parseSpanishDate(possibleEndDateStr);\n            if (possibleEndDate) {\n                parsedEndDate = possibleEndDate;\n                optionalParamsStartIndex = 3;\n            } \n        }\n\n        if (!parsedEndDate) parsedEndDate = this.addOneHourSafe(parsedStartDate);\n        if (new Date(parsedStartDate) >= new Date(parsedEndDate)) return { isValid: false, message: \"❌ Inicio debe ser antes del fin.\" };\n\n        let description, location;\n        const attendees = [];\n        for (let i = optionalParamsStartIndex; i < parts.length; i++) {\n            const part = parts[i];\n            const lowerPart = part.toLowerCase();\n            if (lowerPart.startsWith('descripción:')) description = part.substring('descripción:'.length).trim();\n            else if (lowerPart.startsWith('ubicación:')) location = part.substring('ubicación:'.length).trim();\n            else if (lowerPart.startsWith('asistentes:')) {\n                const emailsStr = part.substring('asistentes:'.length).trim();\n                emailsStr.split(',').forEach(email => {\n                    const trimmedEmail = email.trim();\n                    if (trimmedEmail) attendees.push({ email: trimmedEmail });\n                });\n            }\n        }\n\n        return { isValid: true, parsedStartDate, parsedEndDate, searchTitle, description, location, attendees: attendees.length > 0 ? attendees : undefined };\n    }\n    buildPayload(args, uid, validationResult) {\n        const data = validationResult;\n        const eventDetails = {\n            start: { dateTime: data.parsedStartDate, timeZone: DEFAULT_TIMEZONE },\n            end: { dateTime: data.parsedEndDate, timeZone: DEFAULT_TIMEZONE }\n        };\n        if (data.description) eventDetails.description = data.description;\n        if (data.location) eventDetails.location = data.location;\n        if (data.attendees) eventDetails.attendees = data.attendees;\n        return { firebaseUid: uid, searchTitle: data.searchTitle, eventDetails: eventDetails };\n    }\n}\n\n// 3. BORRAR\nclass DeleteStrategy extends CommandStrategy {\n    validate(args) {\n        if (!args.trim()) return { isValid: false, message: \"❌ **Falta el título.**\\nUsa: `/cancelar Título del Evento`\" };\n        return { isValid: true };\n    }\n    buildPayload(args, uid) {\n        return { firebaseUid: uid, searchTitle: args.trim() };\n    }\n}\n\n// 4. CONSULTAR (ACTUALIZADO: Rango flexible)\nclass CheckStrategy extends CommandStrategy {\n    \n    // Helper para formatear ISO con timezone manual\n    formatISO(dateObj) {\n        const pad = (n) => n < 10 ? '0' + n : n;\n        // Ajustamos la fecha a Timezone MX manualmente (-6)\n        // Nota: Como estamos manipulando 'dateObj' que ya puede venir ajustado,\n        // usamos métodos UTC si la construimos manualmente o Intl.\n        const options = { timeZone: \"America/Mexico_City\", year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };\n        const formatter = new Intl.DateTimeFormat('en-CA', options);\n        const parts = formatter.formatToParts(dateObj);\n        const getPart = (type) => parts.find(p => p.type === type).value;\n        return `${getPart('year')}-${getPart('month')}-${getPart('day')}T${getPart('hour')}:${getPart('minute')}:${getPart('second')}-06:00`;\n    }\n\n    validate(args) {\n        const text = args.trim().toLowerCase();\n        if (!text) return { isValid: false, message: \"❌ **Falta el rango.**\\nEj: `/checar hoy`, `/checar 1 semana`, `/checar 3 dias`\" };\n        \n        const now = new Date();\n        let timeMin, timeMax;\n\n        // 1. DETECCIÓN DE RANGO: \"1 semana\", \"2 dias\"\n        // Regex: Numero + espacio + (dia/dias/semana/semanas)\n        const rangeRegex = /^(\\d+)\\s*(dias?|semanas?|mes(?:es)?)$/i;\n        const match = text.match(rangeRegex);\n\n        if (match) {\n            const quantity = parseInt(match[1]);\n            const unit = match[2];\n            \n            // timeMin es AHORA\n            timeMin = this.formatISO(now);\n            \n            // Calculamos timeMax\n            const endDate = new Date(now);\n            if (unit.startsWith('dia')) {\n                endDate.setDate(endDate.getDate() + quantity);\n            } else if (unit.startsWith('semana')) {\n                endDate.setDate(endDate.getDate() + (quantity * 7));\n            } else if (unit.startsWith('mes')) {\n                endDate.setMonth(endDate.getMonth() + quantity);\n            }\n            timeMax = this.formatISO(endDate);\n\n            return { isValid: true, timeMin, timeMax };\n        }\n\n        // 2. DETECCIÓN DE FECHA ESPECÍFICA (Lógica antigua \"Hoy/Mañana/Fecha\")\n        const parsedDateStr = parseSpanishDate(text);\n        if (parsedDateStr) {\n            // Si es fecha específica, mostramos ESE DÍA completo (00:00 a 23:59)\n            const baseDateString = parsedDateStr.substring(0, 10);\n            return { \n                isValid: true, \n                timeMin: `${baseDateString}T00:00:00-06:00`,\n                timeMax: `${baseDateString}T23:59:59-06:00`\n            };\n        }\n\n        return { isValid: false, message: \"❌ No entendí el rango o fecha.\\nIntenta: `/checar 1 semana` o `/checar hoy`\" };\n    }\n\n    buildPayload(args, uid, validationResult) {\n        return {\n            firebaseUid: uid,\n            timeMin: validationResult.timeMin,\n            timeMax: validationResult.timeMax\n        };\n    }\n}\n\n// --- FACTORY & PARSER ---\nclass CommandContext {\n    constructor(msg) {\n        this.rawText = (msg.text || \"\").trim();\n        this.chatId = msg.chat.id;\n        this.firebaseUid = String(msg.chat.id); \n    }\n    parse() {\n        const lower = this.rawText.toLowerCase();\n        if (lower === '/help' || lower.includes('ayuda')) return { action: 'help', args: '' };\n        if (['hola', 'inicio', 'start'].some(w => lower.includes(w)) || lower === '/start') return { action: 'welcome', args: '' };\n        if (this.rawText.startsWith('/')) {\n            const clean = this.rawText.substring(1);\n            const firstSpace = clean.indexOf(' ');\n            const action = firstSpace === -1 ? clean : clean.substring(0, firstSpace);\n            const args = firstSpace === -1 ? \"\" : clean.substring(firstSpace + 1);\n            return { action: action.toLowerCase(), args };\n        }\n        return { action: 'unknown', args: '' };\n    }\n}\n\nfunction getStrategy(action) {\n    switch (action) {\n        case 'welcome': return new WelcomeStrategy();\n        case 'help': return new HelpStrategy();\n        case 'agendar': return new CreateStrategy();\n        case 'modificar': return new UpdateStrategy();\n        case 'cancelar': return new DeleteStrategy();\n        case 'checar': case 'listar': return new CheckStrategy(); // Soporta ambos\n        default: return null;\n    }\n}\n\n// --- MAIN ---\nlet msg;\ntry { msg = $('Mensaje del usuario').item.json.message; } \ncatch (e) { msg = $input.item.json.message; }\n\nconst context = new CommandContext(msg);\nconst { action, args } = context.parse();\nconst strategy = getStrategy(action);\nlet result = { action, isValid: false, message: \"\", payload: {} };\n\nif (strategy) {\n    const validation = strategy.validate(args);\n    if (validation.isValid) {\n        result.isValid = true;\n        if (action === 'welcome' || action === 'help') {\n            const strategyResult = strategy.buildPayload(args, context.firebaseUid);\n            result.message = strategyResult.message;\n            result.action = strategyResult.action; \n            result.payload = {};\n        } else {\n            result.message = \"Procesando...\";\n            result.payload = strategy.buildPayload(args, context.firebaseUid, validation);\n        }\n    } else {\n        result.message = validation.message;\n        if (!result.message.includes('/help')) result.message += \"\\n\\nEscribe `/help` para ver los formatos.\";\n    }\n} else {\n    result.message = \"⚠️ No entendí tu comando. Escribe `/help` para ayuda.\";\n}\nreturn { json: result };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        -624
+      ],
+      "id": "bda905c8-b166-4b8f-9b25-8996982ccfd2",
+      "name": "Main code"
     }
   ],
   "pinData": {},
@@ -592,7 +685,7 @@
         ],
         [
           {
-            "node": "Send a text message1",
+            "node": "Enviar mensaje de error",
             "type": "main",
             "index": 0
           }
@@ -603,90 +696,42 @@
       "main": [
         [
           {
-            "node": "HTTP Request1",
+            "node": "Crear evento en calendario",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "HTTP Request2",
+            "node": "Editar evento",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "HTTP Request3",
+            "node": "Eliminar evento",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "HTTP Request4",
+            "node": "Mostrar eventos",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Send a text message4",
+            "node": "Mensaje de bienvenida",
             "type": "main",
             "index": 0
           }
-        ]
-      ]
-    },
-    "HTTP Request1": {
-      "main": [
+        ],
         [
           {
-            "node": "Send a text message2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request2": {
-      "main": [
-        [
-          {
-            "node": "Send a text message5",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request4": {
-      "main": [
-        [
-          {
-            "node": "Send a text message3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code in JavaScript": {
-      "main": [
-        [
-          {
-            "node": "Check Validity",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request3": {
-      "main": [
-        [
-          {
-            "node": "Send a text message6",
+            "node": "Mensaje de ayuda",
             "type": "main",
             "index": 0
           }
@@ -708,25 +753,96 @@
       "main": [
         [
           {
-            "node": "If authenticated",
+            "node": "autenticado?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "If authenticated": {
+    "Autenticar usuario": {
       "main": [
         [
           {
-            "node": "Send a text message7",
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Crear evento en calendario": {
+      "main": [
+        [
+          {
+            "node": "Mensaje de creacion exitosa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "autenticado?": {
+      "main": [
+        [
+          {
+            "node": "Main code",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Code in JavaScript",
+            "node": "Autenticar usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Editar evento": {
+      "main": [
+        [
+          {
+            "node": "Send a text message5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eliminar evento": {
+      "main": [
+        [
+          {
+            "node": "Send a text message6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mostrar eventos": {
+      "main": [
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Main code": {
+      "main": [
+        [
+          {
+            "node": "Check Validity",
             "type": "main",
             "index": 0
           }
@@ -738,7 +854,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "88305bb8-3ca0-4cbe-bb72-b4dec434c12e",
+  "versionId": "fbe5698b-3ade-4215-9851-ab81805cae32",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "a1c4193a6eacb441ccaff1e0e015ac007735606336443a264d194e1a5e50543f"
