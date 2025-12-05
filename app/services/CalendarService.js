@@ -35,7 +35,7 @@ export class CalendarService {
     await this._initSession(uid);
     const targetTitle = searchTitle.trim().toLowerCase();
     
-    // Auto-completar fecha fin si falta (Regla de negocio)
+    // Auto-completar fecha fin si falta
     if (changes.start?.dateTime && !changes.end?.dateTime) {
         const start = new Date(changes.start.dateTime);
         const end = new Date(start.getTime() + 60*60*1000);
@@ -51,7 +51,7 @@ export class CalendarService {
     
     matchingEvents = await this.google.listEvents({ q: targetTitle, timeMin: globalMin.toISOString(), timeMax: globalMax.toISOString() });
 
-    // Estrategia 2: Fallback Local (si falló la global y tenemos fecha objetivo)
+    // Estrategia 2: Fallback Local
     if (matchingEvents.length === 0 && changes.start?.dateTime) {
         const targetDate = new Date(changes.start.dateTime);
         if (!isNaN(targetDate.getTime())) {
@@ -91,7 +91,6 @@ export class CalendarService {
     if (matchingEvents.length === 0) {
         const scanMax = new Date(); scanMax.setMonth(scanMax.getMonth() + 3);
         const scanEvents = await this.google.listEvents({ timeMin: new Date().toISOString(), timeMax: scanMax.toISOString() });
-        // Filtro estricto para borrado
         matchingEvents = scanEvents.filter(e => (e.summary || "").toLowerCase().trim() === targetTitle);
     }
 
