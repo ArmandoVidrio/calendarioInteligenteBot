@@ -4,8 +4,9 @@
  * POR QUÉ: Abstrae la lógica de base de datos (Firestore). Si mañana se cambia a MongoDB o SQL, solo se modifica este archivo, no los controladores.
  */
 export class UserRepository {
-  constructor(db) {
+  constructor(db, auth) {
     this.db = db;
+    this.auth = auth;
   }
 
   async findUserByFirebaseUid(uid) {
@@ -13,14 +14,21 @@ export class UserRepository {
     return doc.exists ? doc.data() : null;
   }
 
-  async findFirebaseUidByTelegramId(telegramId) {
+  async findMappingByTelegramId(telegramId) {
     const doc = await this.db.collection('telegramUserMapping').doc(telegramId).get();
-    return doc.exists ? doc.data().firebaseUid : null;
+    return doc.exists ? doc.data() : null;
+  }
+
+  async createFirebaseUser(telegramId) {
+    return await this.auth.createUser({
+      uid: telegramId,
+      displayName: `Telegram User ${telegramId}`,
+    });
   }
 
   async createTelegramMapping(telegramId, firebaseUid) {
     await this.db.collection('telegramUserMapping').doc(telegramId).set({
-      firebaseUid,
+      firebaseUid: firebaseUid,
       telegramUserId: telegramId,
       createdAt: new Date()
     });
