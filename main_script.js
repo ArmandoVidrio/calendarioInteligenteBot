@@ -5,7 +5,11 @@
  */
 const DEFAULT_TIMEZONE = "America/Mexico_City";
 
-/** Funciones de utilidad **/
+/**
+ * ---------------------------------------------------------
+ * UTILIDAD: PARSER FLEXIBLE (Soporta con/sin "de")
+ * ---------------------------------------------------------
+ */
 function parseSpanishDate(text) {
     const months = {
         'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
@@ -13,45 +17,66 @@ function parseSpanishDate(text) {
     };
     
     const pad = (n) => n < 10 ? '0' + n : n;
-
     const lowerText = text.toLowerCase().trim();
     const now = new Date(); 
     
+    // Configuración Timezone México
+    const offsetMexico = -6 * 60; 
+    const nowMexico = new Date(now.getTime() + (offsetMexico * 60 * 1000));
+
     let year, monthIdx, day, hour, minute;
     let yearExplicitlyProvided = false;
 
+    // --- HELPER: Regex Super Flexible para Hora ---
+    const extractTime = (str, defaultHour) => {
+        // Busca hora tipo: 2:00pm, 2pm, 14:00, 9 am
+        const timeRegex = /(\d{1,2})(?:[:\.](\d{2}))?\s*([ap]\.?m\.?)?/i;
+        const match = str.match(timeRegex);
+        
+        let h = defaultHour; 
+        let m = 0;
+        
+        if (match) {
+            h = parseInt(match[1]);
+            m = match[2] ? parseInt(match[2]) : 0;
+            const ampm = match[3] ? match[3].replace(/\./g, '').toLowerCase() : null;
+            
+            if (ampm === 'pm' && h < 12) h += 12;
+            if (ampm === 'am' && h === 12) h = 0;
+        }
+        return { h, m };
+    };
+
     // A. DETECCIÓN DE FECHA RELATIVA (HOY / MAÑANA)
     if (lowerText.includes('mañana') || lowerText.includes('hoy')) {
-        const offsetMexico = -6 * 60; 
-        const nowMexico = new Date(now.getTime() + (offsetMexico * 60 * 1000));
-        
-        const daysToAdd = lowerText.includes('mañana') ? 1 : 0;
-        nowMexico.setDate(nowMexico.getDate() + daysToAdd);
+        const baseDate = new Date(nowMexico);
+        if (lowerText.includes('mañana')) baseDate.setDate(baseDate.getDate() + 1);
 
-        year = nowMexico.getUTCFullYear();
-        monthIdx = nowMexico.getUTCMonth();
-        day = nowMexico.getUTCDate();
+        year = baseDate.getUTCFullYear();
+        monthIdx = baseDate.getUTCMonth();
+        day = baseDate.getUTCDate();
 
-        const timeRegex = /(?:a\s+las?|at|\s)\s*(\d{1,2})(?:[:\.](\d{2}))?\s*(am|pm)?/i;
-        const timeMatch = lowerText.match(timeRegex);
-
-        hour = 9; minute = 0; // Default
-        if (timeMatch) {
-            hour = parseInt(timeMatch[1]);
-            minute = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
-            const ampm = timeMatch[3];
-            if (ampm === 'pm' && hour < 12) hour += 12;
-            if (ampm === 'am' && hour === 12) hour = 0;
-        } else if (lowerText.includes('hoy')) {
-            hour = nowMexico.getUTCHours() + 1; 
+        let defaultH = 9;
+        if (lowerText.includes('hoy') && !lowerText.match(/\d/)) {
+            defaultH = nowMexico.getUTCHours() + 1;
         }
+        
+        const timeObj = extractTime(lowerText, defaultH);
+        hour = timeObj.h;
+        minute = timeObj.m;
 
     } else {
-        // B. DETECCIÓN DE FECHA ESPECÍFICA
-        const regex = /(\d{1,2})\s+de\s+([a-záéíóú]+)(?:\s+del?\s+(\d{4}))?(?:[\s,]+(?:a\s+las?|a\s+la|at)?\s*(\d{1,2})(?:[:\.](\d{2}))?\s*(am|pm)?)?/i;
-        const match = lowerText.match(regex);
+        // B. DETECCIÓN DE FECHA ESPECÍFICA (MEJORADA)
+        // Explicación Regex:
+        // 1. (\d{1,2}) -> Día
+        // 2. (?:\s+de\s+|\s+) -> Acepta " de " O solo espacio
+        // 3. ([a-záé...]+) -> Mes
+        // 4. (?:\s+(?:del?|de)?\s*(\d{4}))? -> Acepta " del 2025", " de 2025" o " 2025"
+        const dateRegex = /(\d{1,2})(?:\s+de\s+|\s+)([a-záéíóú]+)(?:\s+(?:del?|de)?\s*(\d{4}))?/i;
+        const match = lowerText.match(dateRegex);
 
         if (!match) {
+            // Fallback ISO
             const isoDate = new Date(text);
             if (!isNaN(isoDate.getTime())) {
                 return isoDate.toISOString().split('.')[0] + "-06:00";
@@ -69,41 +94,29 @@ function parseSpanishDate(text) {
             year = parseInt(match[3]);
             yearExplicitlyProvided = true;
         } else {
-            year = new Date().getFullYear();
+            year = nowMexico.getUTCFullYear();
         }
 
-        hour = 9; minute = 0;
-        if (match[4]) {
-            hour = parseInt(match[4]);
-            minute = match[5] ? parseInt(match[5]) : 0;
-            const ampm = match[6];
-            if (ampm === 'pm' && hour < 12) hour += 12;
-            if (ampm === 'am' && hour === 12) hour = 0;
-        }
+        // Buscamos la hora en el resto del texto
+        const textWithoutDate = lowerText.replace(match[0], '');
+        const timeObj = extractTime(textWithoutDate, 9);
+        hour = timeObj.h;
+        minute = timeObj.m;
     }
 
+    // --- CONSTRUCCIÓN ISO MANUAL ---
     let isoString = `${year}-${pad(monthIdx + 1)}-${pad(day)}T${pad(hour)}:${pad(minute)}:00-06:00`;
     let parsedDate = new Date(isoString);
 
     if (!yearExplicitlyProvided && parsedDate < now) {
-        year += 1;
-        isoString = `${year}-${pad(monthIdx + 1)}-${pad(day)}T${pad(hour)}:${pad(minute)}:00-06:00`;
+        const isSameDay = parsedDate.getDate() === now.getDate() && parsedDate.getMonth() === now.getMonth();
+        if (!isSameDay) {
+            year += 1;
+            isoString = `${year}-${pad(monthIdx + 1)}-${pad(day)}T${pad(hour)}:${pad(minute)}:00-06:00`;
+        }
     }
 
     return isoString;
-}
-
-
-function getStrategy(action) {
-    switch (action) {
-        case 'welcome': return new WelcomeStrategy();
-        case 'help': return new HelpStrategy();
-        case 'agendar': return new CreateStrategy();
-        case 'modificar': return new UpdateStrategy();
-        case 'cancelar': return new DeleteStrategy();
-        case 'checar': case 'listar': return new CheckStrategy(); // Soporta ambos
-        default: return null;
-    }
 }
 
 /**
@@ -321,6 +334,7 @@ class DeleteStrategy extends CommandStrategy {
     }
 }
 
+// 4. CONSULTAR (MEJORADO: Siempre busca desde el inicio del día)
 // 4. CONSULTAR (CORREGIDO: Manejo estricto de "Hoy" y "Ahora")
 class CheckStrategy extends CommandStrategy {
     
@@ -429,6 +443,18 @@ class CommandContext {
             return { action: action.toLowerCase(), args };
         }
         return { action: 'unknown', args: '' };
+    }
+}
+
+function getStrategy(action) {
+    switch (action) {
+        case 'welcome': return new WelcomeStrategy();
+        case 'help': return new HelpStrategy();
+        case 'agendar': return new CreateStrategy();
+        case 'modificar': return new UpdateStrategy();
+        case 'cancelar': return new DeleteStrategy();
+        case 'checar': case 'listar': return new CheckStrategy(); // Soporta ambos
+        default: return null;
     }
 }
 
