@@ -1,0 +1,20 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title C4 - Nivel 1: Asistente Inteligente de Calendario para Telegram
+
+Person(usuario, "Usuario Final", "Interactúa mediante Telegram enviando texto en lenguaje natural.")
+
+System(telegram, "Telegram", "Plataforma de mensajería que reenvía mensajes mediante Webhooks.")
+System(n8n, "n8n Workflow", "Orquestador que ejecuta NLP y envía peticiones al backend.")
+System(backend, "Backend API (Firebase Hosting)", "Lógica de negocio, seguridad y comunicación con Google.")
+SystemDb(firestore, "Cloud Firestore", "Base de datos NoSQL que almacena tokens y enlaces de usuario.")
+System_Ext(googleCalendar, "Google Calendar API", "API externa donde residen los eventos reales.")
+
+Rel(usuario, telegram, "Envía mensajes")
+Rel(telegram, n8n, "Envía Webhook (POST)")
+Rel(n8n, backend, "Llama a endpoints REST (CRUD)")
+Rel(backend, firestore, "Lee/Escribe tokens y mapeos")
+Rel(backend, googleCalendar, "Crea/Consulta/Actualiza/Borra eventos en Google Calendar")
+
+@enduml

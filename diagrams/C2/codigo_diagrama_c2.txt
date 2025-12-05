@@ -1,0 +1,22 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 - Nivel 2: Asistente de Calendario - Contenedores
+
+Person(usuario, "Usuario Final", "Usa Telegram para gestionar Google Calendar.")
+System_Ext(telegram, "Telegram", "Plataforma que envia webhooks.")
+System_Ext(googleCalendar, "Google Calendar API", "Servicio externo de calendarios.")
+
+System_Boundary(sistema, "Asistente de Calendario") {
+  Container(n8n, "Flujo n8n", "Orquestador", "Procesa NLP, interpreta comandos, normaliza fechas y decide la accion.")
+  Container(backend, "Backend API", "Node.js/Express (Firebase Hosting)", "Expone endpoints REST, maneja OAuth2, validacion, busqueda hibrida y sincronizacion con Google Calendar.")
+  ContainerDb(firestore, "Cloud Firestore", "Base de datos NoSQL", "Almacena refresh tokens y el mapeo entre TelegramID y FirebaseUID.")
+}
+
+Rel(usuario, telegram, "Envia mensajes")
+Rel(telegram, n8n, "Envia webhook (POST)")
+Rel(n8n, backend, "Llamadas HTTP REST (CRUD)")
+Rel(backend, firestore, "Lectura y escritura de tokens y usuarios")
+Rel(backend, googleCalendar, "Operaciones CRUD sobre eventos")
+
+@enduml

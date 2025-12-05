@@ -5,11 +5,7 @@
  */
 const DEFAULT_TIMEZONE = "America/Mexico_City";
 
-/**
- * ---------------------------------------------------------
- * UTILIDAD: PARSER ROBUSTO CON TIMEZONE FIJO (MÉXICO)
- * ---------------------------------------------------------
- */
+/** Funciones de utilidad **/
 function parseSpanishDate(text) {
     const months = {
         'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
@@ -95,6 +91,19 @@ function parseSpanishDate(text) {
     }
 
     return isoString;
+}
+
+
+function getStrategy(action) {
+    switch (action) {
+        case 'welcome': return new WelcomeStrategy();
+        case 'help': return new HelpStrategy();
+        case 'agendar': return new CreateStrategy();
+        case 'modificar': return new UpdateStrategy();
+        case 'cancelar': return new DeleteStrategy();
+        case 'checar': case 'listar': return new CheckStrategy(); // Soporta ambos
+        default: return null;
+    }
 }
 
 /**
@@ -420,18 +429,6 @@ class CommandContext {
             return { action: action.toLowerCase(), args };
         }
         return { action: 'unknown', args: '' };
-    }
-}
-
-function getStrategy(action) {
-    switch (action) {
-        case 'welcome': return new WelcomeStrategy();
-        case 'help': return new HelpStrategy();
-        case 'agendar': return new CreateStrategy();
-        case 'modificar': return new UpdateStrategy();
-        case 'cancelar': return new DeleteStrategy();
-        case 'checar': case 'listar': return new CheckStrategy(); // Soporta ambos
-        default: return null;
     }
 }
 
