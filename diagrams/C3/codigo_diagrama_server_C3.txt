@@ -1,0 +1,43 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+title C4 - Nivel 3: Backend API (Node.js)
+
+Container_Boundary(backend, "Backend API") {
+  Component(server, "Server", "Entry Point", "Configura Express, CORS, middleware y actua como composition root.")
+  Component(authMiddleware, "Auth Middleware", "Middleware", "Valida header x-api-key.")
+  Component(calendarController, "Calendar Controller", "Controller", "Rutas protegidas de calendario. Llama a Calendar Service.")
+  Component(authController, "Auth Controller", "Controller", "Rutas publicas de OAuth. Llama a Auth Service.")
+  Component(calendarService, "Calendar Service", "Service", "Logica de negocio. Implementa busqueda hibrida y reglas.")
+  Component(authService, "Auth Service", "Service", "Gestiona vinculacion de cuentas y tokens.")
+  Component(userRepository, "User Repository", "Repository", "Acceso a Firestore y Firebase Auth.")
+  Component(calendarAdapter, "Google Calendar Adapter", "Adapter", "Wrapper sobre googleapis para eventos.")
+  Component(authAdapter, "Google Auth Adapter", "Adapter", "Wrapper OAuth2: genera URL y cambia codigo por tokens.")
+}
+
+SystemDb(db, "Cloud Firestore", "Almacena tokens y mapeos")
+System_Ext(firebaseAuth, "Firebase Auth", "Servicio de autenticacion")
+System_Ext(googleCalendar, "Google Calendar API", "API externa")
+System_Ext(googleOAuth, "Google OAuth2", "Proveedor OAuth")
+
+Rel(server, authMiddleware, "Configura y aplica")
+Rel(server, calendarController, "Inyecta dependencias")
+Rel(server, authController, "Inyecta dependencias")
+Rel(server, calendarService, "Inyecta dependencias")
+Rel(server, authService, "Inyecta dependencias")
+Rel(server, userRepository, "Inyecta dependencias")
+Rel(server, calendarAdapter, "Inyecta dependencias")
+Rel(server, authAdapter, "Inyecta dependencias")
+
+Rel(authMiddleware, calendarController, "Permite pasar solicitudes validadas")
+Rel(calendarController, calendarService, "Llama a")
+Rel(authController, authService, "Llama a")
+Rel(calendarService, userRepository, "Lee/Escribe datos de usuario")
+Rel(calendarService, calendarAdapter, "Invoca Google Calendar")
+Rel(authService, userRepository, "Lee/Escribe usuarios y tokens")
+Rel(authService, authAdapter, "Intercambia codigos OAuth2")
+Rel(userRepository, db, "Lectura/Escritura")
+Rel(userRepository, firebaseAuth, "Crea usuarios")
+Rel(calendarAdapter, googleCalendar, "Llama a API")
+Rel(authAdapter, googleOAuth, "Intercambia codigos")
+
+@enduml
