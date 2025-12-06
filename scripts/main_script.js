@@ -10,16 +10,15 @@ function parseSpanishDate(text) {
     const lowerText = text.toLowerCase().trim();
     const now = new Date(); 
     
-    // Configuración Timezone México
+    // Cálculo manual de offset para forzar UTC-6 sin depender de la configuración del servidor
     const offsetMexico = -6 * 60; 
     const nowMexico = new Date(now.getTime() + (offsetMexico * 60 * 1000));
 
     let year, monthIdx, day, hour, minute;
     let yearExplicitlyProvided = false;
 
-    // --- HELPER: Regex Super Flexible para Hora ---
+    // Logica para extraer horas en formatos variados (2:00pm, 14:00, 9 am)
     const extractTime = (str, defaultHour) => {
-        // Busca hora tipo: 2:00pm, 2pm, 14:00, 9 am
         const timeRegex = /(\d{1,2})(?:[:\.](\d{2}))?\s*([ap]\.?m\.?)?/i;
         const match = str.match(timeRegex);
         
@@ -37,7 +36,7 @@ function parseSpanishDate(text) {
         return { h, m };
     };
 
-    // A. DETECCIÓN DE FECHA RELATIVA (HOY / MAÑANA)
+    // A. Lógica para fechas relativas (Hoy/Mañana)
     if (lowerText.includes('mañana') || lowerText.includes('hoy')) {
         const baseDate = new Date(nowMexico);
         if (lowerText.includes('mañana')) baseDate.setDate(baseDate.getDate() + 1);
@@ -56,17 +55,12 @@ function parseSpanishDate(text) {
         minute = timeObj.m;
 
     } else {
-        // B. DETECCIÓN DE FECHA ESPECÍFICA (MEJORADA)
-        // Explicación Regex:
-        // 1. (\d{1,2}) -> Día
-        // 2. (?:\s+de\s+|\s+) -> Acepta " de " O solo espacio
-        // 3. ([a-záé...]+) -> Mes
-        // 4. (?:\s+(?:del?|de)?\s*(\d{4}))? -> Acepta " del 2025", " de 2025" o " 2025"
+        // B. Regex para fechas explícitas (ej: "15 de enero", "15 enero 2025")
         const dateRegex = /(\d{1,2})(?:\s+de\s+|\s+)([a-záéíóú]+)(?:\s+(?:del?|de)?\s*(\d{4}))?/i;
         const match = lowerText.match(dateRegex);
 
         if (!match) {
-            // Fallback ISO
+            // Fallback a ISO estándar si falla el NLP
             const isoDate = new Date(text);
             if (!isNaN(isoDate.getTime())) {
                 return isoDate.toISOString().split('.')[0] + "-06:00";
@@ -87,17 +81,17 @@ function parseSpanishDate(text) {
             year = nowMexico.getUTCFullYear();
         }
 
-        // Buscamos la hora en el resto del texto
         const textWithoutDate = lowerText.replace(match[0], '');
         const timeObj = extractTime(textWithoutDate, 9);
         hour = timeObj.h;
         minute = timeObj.m;
     }
 
-    // --- CONSTRUCCIÓN ISO MANUAL ---
+    // Construcción manual de ISO string para garantizar zona horaria correcta
     let isoString = `${year}-${pad(monthIdx + 1)}-${pad(day)}T${pad(hour)}:${pad(minute)}:00-06:00`;
     let parsedDate = new Date(isoString);
 
+    // Si la fecha ya pasó este año, asumir el siguiente
     if (!yearExplicitlyProvided && parsedDate < now) {
         const isSameDay = parsedDate.getDate() === now.getDate() && parsedDate.getMonth() === now.getMonth();
         if (!isSameDay) {
@@ -109,16 +103,11 @@ function parseSpanishDate(text) {
     return isoString;
 }
 
-/**
- * ---------------------------------------------------------
- * ESTRATEGIAS
- * ---------------------------------------------------------
- */
 class CommandStrategy {
     validate(args) { return { isValid: false, message: "Error interno" }; }
     buildPayload(args, uid) { return {}; }
     
-    // Helper compartido para sumar 1 hora seguro en MX
+    // Utilidad para sumar 1 hora preservando el contexto de Timezone MX
     addOneHourSafe(isoDateString) {
         const date = new Date(isoDateString);
         date.setHours(date.getHours() + 1);
@@ -135,7 +124,6 @@ class CommandStrategy {
     }
 }
 
-// 0. BIENVENIDA
 class WelcomeStrategy extends CommandStrategy {
     validate(args) { return { isValid: true }; }
     buildPayload(args, uid) {
@@ -146,7 +134,6 @@ class WelcomeStrategy extends CommandStrategy {
     }
 }
 
-// AYUDA
 class HelpStrategy extends CommandStrategy {
     validate(args) { return { isValid: true }; }
     buildPayload(args, uid) {
@@ -192,7 +179,6 @@ class HelpStrategy extends CommandStrategy {
     }
 }
 
-// 1. CREAR (Agendar)
 class CreateStrategy extends CommandStrategy {
     parseEventArgs(args) {
         const parts = args.split('|').map(s => s.trim());
@@ -254,7 +240,6 @@ class CreateStrategy extends CommandStrategy {
     }
 }
 
-// 2. MODIFICAR
 class UpdateStrategy extends CommandStrategy {
     validate(args) {
         const parts = args.split('|').map(s => s.trim());
@@ -313,7 +298,6 @@ class UpdateStrategy extends CommandStrategy {
     }
 }
 
-// 3. BORRAR
 class DeleteStrategy extends CommandStrategy {
     validate(args) {
         if (!args.trim()) return { isValid: false, message: "❌ **Falta el título.**\nUsa: `/cancelar Título del Evento`" };
@@ -324,11 +308,9 @@ class DeleteStrategy extends CommandStrategy {
     }
 }
 
-// 4. CONSULTAR (MEJORADO: Siempre busca desde el inicio del día)
-// 4. CONSULTAR (CORREGIDO: Manejo estricto de "Hoy" y "Ahora")
 class CheckStrategy extends CommandStrategy {
     
-    // Helper para obtener string ISO con zona horaria MX (-06:00)
+    // Formatea Date a ISO string respetando hardcoded timezone (-06:00)
     getMexicoISO(dateObj) {
         const options = { 
             timeZone: "America/Mexico_City", 
@@ -350,18 +332,17 @@ class CheckStrategy extends CommandStrategy {
         const now = new Date();
         const nowISO = this.getMexicoISO(now); 
 
-        // 1. CASO ESPECIAL: "HOY" (Prioridad alta)
-        // Si el usuario dice "hoy", queremos desde AHORA MISMO hasta el final del día.
+        // 1. Prioridad a "hoy" (Desde ahora mismo hasta fin del día)
         if (text === 'hoy') {
-            const todayDatePart = nowISO.split('T')[0]; // 2025-12-04
+            const todayDatePart = nowISO.split('T')[0]; 
             return { 
                 isValid: true, 
-                timeMin: nowISO, // Desde este segundo exacto
-                timeMax: `${todayDatePart}T23:59:59-06:00` // Hasta media noche
+                timeMin: nowISO, 
+                timeMax: `${todayDatePart}T23:59:59-06:00`
             };
         }
 
-        // 2. DETECCIÓN DE RANGO: "1 semana", "2 dias"
+        // 2. Parseo de rangos naturales (1 semana, 2 dias)
         const rangeRegex = /^(\d+)\s*(dias?|semanas?|mes(?:es)?)$/i;
         const match = text.match(rangeRegex);
 
@@ -369,11 +350,9 @@ class CheckStrategy extends CommandStrategy {
             const quantity = parseInt(match[1]);
             const unit = match[2];
             
-            // timeMin es AHORA MISMO
             const timeMin = nowISO;
-            
-            // Calculamos timeMax
             const endDate = new Date(now);
+            
             if (unit.startsWith('dia')) {
                 endDate.setDate(endDate.getDate() + quantity);
             } else if (unit.startsWith('semana')) {
@@ -384,17 +363,16 @@ class CheckStrategy extends CommandStrategy {
             
             const endISO = this.getMexicoISO(endDate);
             const endDatePart = endISO.split('T')[0];
-            const timeMax = `${endDatePart}T23:59:59-06:00`; // Final del último día del rango
+            const timeMax = `${endDatePart}T23:59:59-06:00`; 
 
             return { isValid: true, timeMin, timeMax };
         }
 
-        // 3. DETECCIÓN DE FECHA ESPECÍFICA (Mañana, 4 de diciembre, etc.)
+        // 3. Fechas específicas futuras
         const parsedDateStr = parseSpanishDate(text);
         if (parsedDateStr) {
-            const baseDateString = parsedDateStr.substring(0, 10); // YYYY-MM-DD
+            const baseDateString = parsedDateStr.substring(0, 10); 
             
-            // Si es un día futuro o pasado específico, mostramos desde las 00:00
             return { 
                 isValid: true, 
                 timeMin: `${baseDateString}T00:00:00-06:00`,
@@ -414,7 +392,6 @@ class CheckStrategy extends CommandStrategy {
     }
 }
 
-// --- FACTORY & PARSER ---
 class CommandContext {
     constructor(msg) {
         this.rawText = (msg.text || "").trim();
@@ -443,12 +420,11 @@ function getStrategy(action) {
         case 'agendar': return new CreateStrategy();
         case 'modificar': return new UpdateStrategy();
         case 'cancelar': return new DeleteStrategy();
-        case 'checar': case 'listar': return new CheckStrategy(); // Soporta ambos
+        case 'checar': case 'listar': return new CheckStrategy(); 
         default: return null;
     }
 }
 
-// --- MAIN ---
 let msg;
 try { msg = $('Mensaje del usuario').item.json.message; } 
 catch (e) { msg = $input.item.json.message; }
