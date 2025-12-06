@@ -1,5 +1,5 @@
 /**
- * PATRÓN: Facade / Service Layer
+ * PATRÓN: Service Layer
  * SOLID: Single Responsibility Principle (SRP) - Lógica de Negocio Pura
  * POR QUÉ: Aquí reside la inteligencia del sistema (Búsqueda Híbrida, Fallbacks).
  * El controlador solo recibe datos y llama a este servicio. Este servicio
