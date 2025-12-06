@@ -65,7 +65,7 @@ Mueve el evento a una nueva hora y ajusta su duración a 1 hora.
 Cambia la hora de inicio y fin.
 * **Sintaxis:** `/modificar [Título Actual] | [Inicio] | [Fin]`
 * **Ejemplo:**
-    * `/modificar Cena Equipo | viernes 20:00 | viernes 23:00`
+    * `/modificar Cena Equipo | 12 diciembre 20:00 | 12 diciembre 23:00`
 
 #### C) Actualizar Detalles
 También puedes usar este comando para agregar información sin cambiar la hora (poniendo la misma hora) o cambiando la hora y agregando datos.

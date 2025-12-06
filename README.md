@@ -42,7 +42,7 @@ El bot utiliza procesamiento de lenguaje natural. Los comandos empiezan con `/` 
 
 ### 2. 🔍 Modificar Eventos (`/modificar`)
 * **Mover Horario:** `/modificar Gym | hoy 19:00`
-* **Reagendar:** `/modificar Cena | viernes 20:00 | viernes 23:00`
+* **Reagendar:** `/modificar Cena | 12 de diciembre 20:00 | 12 de diciembre 23:00`
 * **Actualizar Datos:** `/modificar Cita | hoy 5pm | Ubicación: Consultorio 2`
 
 ### 3. 🗑️ Cancelar Eventos (`/cancelar`)
