@@ -172,6 +172,10 @@ Muestra el Patrón Estrategia usado en n8n y la estructura de clases del backend
 Ilustra cómo el sistema procesa un mensaje desde la entrada hasta la respuesta.
 ![Diagrama Flujo](./diagrams/diagrama_flujo_conversacional.png)
 
+#### Diagrama de Flujo N8N
+Muestra el flujo de trabajo dentro de n8n Cloud.
+![Diagrama Flujo N8N](./diagrams/n8n_workflow.png)
+
 ---
 
 ## 9. Diseño VUI (Interfaz de Voz/Texto)
