@@ -4,11 +4,11 @@ Este proyecto consta de dos partes principales: un **Bot de Telegram** (gestiona
 
 ---
 
-## 🤖 Parte 1: Guía de Comandos (Telegram)
+## Parte 1: Guía de Comandos (Telegram)
 
 El bot utiliza un motor de procesamiento de lenguaje natural avanzado. Los comandos empiezan con `/` y los argumentos se separan con una barra vertical `|`.
 
-### 🧠 Formatos de Fecha y Hora Soportados
+### Formatos de Fecha y Hora Soportados
 El bot es flexible y entiende lenguaje natural. Puedes escribir fechas de las siguientes formas:
 
 | Tipo | Formato Aceptado | Ejemplo Real |
@@ -24,7 +24,7 @@ El bot es flexible y entiende lenguaje natural. Puedes escribir fechas de las si
 
 ---
 
-### 1. 📅 Agendar Eventos (`/agendar`)
+### 1. Agendar Eventos (`/agendar`)
 
 #### A) Agendar Rápido (1 hora por defecto)
 Solo necesitas el título y la fecha de inicio.
@@ -50,7 +50,7 @@ Puedes agregar `Descripción`, `Ubicación` y `Asistentes` al final de cualquier
 
 ---
 
-### 2. 🔍 Modificar Eventos (`/modificar`)
+### 2. Modificar Eventos (`/modificar`)
 
 Busca un evento por su título (o parte de él) y lo actualiza.
 
@@ -74,7 +74,7 @@ También puedes usar este comando para agregar información sin cambiar la hora 
 
 ---
 
-### 3. 🗑️ Cancelar Eventos (`/cancelar`)
+### 3. Cancelar Eventos (`/cancelar`)
 
 Elimina un evento buscando por su título exacto.
 * **Sintaxis:** `/cancelar [Título del Evento]`
@@ -84,17 +84,16 @@ Elimina un evento buscando por su título exacto.
 
 ---
 
-### 4. 🗓️ Consultar Agenda (`/checar`)
+### 4. Consultar Agenda (`/checar`)
 
 Revisa qué tienes programado. Soporta días específicos o rangos de tiempo naturales.
 
 #### A) Por Día Específico
 * **Sintaxis:** `/checar [Día]`
 * **Ejemplos:**
-    * `/checar hoy`
-    * `/checar mañana`
+    * `/checar hoy` *(Muestra solo eventos pendientes desde la hora actual)*
+    * `/checar mañana` *(Muestra todo el día 00:00 - 23:59)*
     * `/checar 24 de diciembre`
-    * `/checar 1 enero`
 
 #### B) Por Rango de Tiempo
 Calcula automáticamente desde el inicio del día de hoy hasta X tiempo en el futuro.
@@ -108,7 +107,7 @@ Calcula automáticamente desde el inicio del día de hoy hasta X tiempo en el fu
 
 ---
 
-## ⚙️ Parte 2: Backend de Google Calendar (Firebase App Hosting)
+## Parte 2: Backend de Google Calendar (Firebase App Hosting)
 
 ### Descripción General
 
@@ -140,18 +139,25 @@ Crea un nuevo evento.
 * **Body:** `{ firebaseUid, eventDetails: { summary, start, end, ... } }`
 
 #### `PUT /api/update-calendar-event`
-Modifica eventos existentes.
-* **Estrategia Híbrida:** 1. Búsqueda Global (+/- 1 año). 2. Fallback Local (+/- 7 días).
+Modifica eventos existentes. Utiliza una **Estrategia de Búsqueda Híbrida** para asegurar que se encuentre el evento incluso si Google no lo ha indexado aún.
+* **Estrategia Híbrida:**
+    1.  **Búsqueda Global:** Consulta el índice de Google (+/- 1 año).
+    2.  **Fallback Local:** Si falla, descarga eventos de **+/- 7 días** alrededor de la fecha objetivo y filtra manualmente.
 * **Body:** `{ firebaseUid, searchTitle, eventDetails }`
 
 #### `DELETE /api/delete-calendar-event`
 Elimina eventos por título.
-* **Estrategia Híbrida:** 1. Búsqueda Global. 2. Fallback Escaneo próximos 3 meses.
+* **Estrategia Híbrida:**
+    1.  **Búsqueda Global:** Consulta el índice de Google.
+    2.  **Fallback Futuro:** Si falla, escanea manualmente los **próximos 3 meses** para encontrar eventos recién creados.
 * **Body:** `{ firebaseUid, searchTitle }`
 
 #### `GET /api/list-events-by-time`
 Obtiene una lista de eventos dentro de un rango de tiempo.
-* **Query Parameters:** `firebaseUid`, `timeMin` (ISO), `timeMax` (ISO).
+* **Query Parameters:**
+    * `firebaseUid`: ID del usuario.
+    * `timeMin`: Fecha ISO 8601 (ej. `2025-12-05T08:00:00-06:00`).
+    * `timeMax`: Fecha ISO 8601.
 
 #### `GET /api/user-exists`
 Verifica si un usuario existe y está autorizado.
@@ -160,8 +166,8 @@ Verifica si un usuario existe y está autorizado.
 ---
 
 ### Consideraciones de Seguridad
-* **API Keys:** Header `x-api-key` obligatorio.
-* **Firestore:** Tokens protegidos por reglas de seguridad.
+* **API Keys:** Header `x-api-key` obligatorio en todas las peticiones privadas.
+* **Firestore:** Tokens protegidos por reglas de seguridad (`allow read, write: if false;`), accesibles solo por el Admin SDK.
 * **Mínimos Privilegios:** Service account restringida.
 
 ### Tecnologías Utilizadas

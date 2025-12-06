@@ -1,15 +1,5 @@
-/**
- * ---------------------------------------------------------
- * CONFIGURACIÓN
- * ---------------------------------------------------------
- */
 const DEFAULT_TIMEZONE = "America/Mexico_City";
 
-/**
- * ---------------------------------------------------------
- * UTILIDAD: PARSER FLEXIBLE (Soporta con/sin "de")
- * ---------------------------------------------------------
- */
 function parseSpanishDate(text) {
     const months = {
         'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
@@ -20,14 +10,14 @@ function parseSpanishDate(text) {
     const lowerText = text.toLowerCase().trim();
     const now = new Date(); 
     
-    // Configuración Timezone México
+    // Configuracion timezone mexico
     const offsetMexico = -6 * 60; 
     const nowMexico = new Date(now.getTime() + (offsetMexico * 60 * 1000));
 
     let year, monthIdx, day, hour, minute;
     let yearExplicitlyProvided = false;
 
-    // --- HELPER: Regex Super Flexible para Hora ---
+    // helper para hora flexible
     const extractTime = (str, defaultHour) => {
         // Busca hora tipo: 2:00pm, 2pm, 14:00, 9 am
         const timeRegex = /(\d{1,2})(?:[:\.](\d{2}))?\s*([ap]\.?m\.?)?/i;
