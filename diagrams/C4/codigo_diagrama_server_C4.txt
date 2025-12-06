@@ -1,0 +1,83 @@
+@startuml
+skinparam packageStyle rectangle
+title C4 Nivel 4 - Diagrama de Clases del Backend Node.js
+
+package "Controllers (Entrada HTTP)" {
+  class CalendarController {
+    +create(req, res)
+    +update(req, res)
+    +delete(req, res)
+    +list(req, res)
+  }
+
+  class AuthController {
+    +initiate(req, res)
+    +callback(req, res)
+  }
+}
+
+package "Services (Logica de Negocio)" {
+  class CalendarService {
+    +createEvent(uid, details)
+    +listEvents(uid, min, max)
+    +updateEventHybrid(uid, searchTitle, changes)
+    +deleteEventHybrid(uid, searchTitle)
+    -_initSession(uid)
+  }
+
+  class AuthService {
+    +initiateAuthFlow(telegramId)
+    +handleCallback(code, uid)
+  }
+}
+
+package "Repositories (Base de Datos)" {
+  class UserRepository {
+    +findUserByFirebaseUid(uid)
+    +findMappingByTelegramId(telegramId)
+    +createFirebaseUser(telegramId)
+    +saveTokens(uid, tokens)
+  }
+}
+
+package "Adapters (APIs Externas)" {
+  class GoogleCalendarAdapter {
+    +setCredentials(tokens)
+    +listEvents(params)
+    +patchEvent(id, data)
+    +deleteEvent(id)
+    +insertEvent(data)
+  }
+
+  class GoogleAuthAdapter {
+    +generateAuthUrl(state)
+    +exchangeCodeForTokens(code)
+  }
+}
+
+package "Middleware (Seguridad)" {
+  class AuthMiddleware {
+    +authenticateN8n(req, res, next)
+  }
+}
+
+CalendarController --> CalendarService
+AuthController --> AuthService
+
+CalendarService --> UserRepository
+CalendarService --> GoogleCalendarAdapter
+
+AuthService --> UserRepository
+AuthService --> GoogleAuthAdapter
+
+class Firestore
+class FirebaseAuth
+UserRepository --> Firestore
+UserRepository --> FirebaseAuth
+
+class GoogleCalendarAPI
+class GoogleOAuthAPI
+GoogleCalendarAdapter --> GoogleCalendarAPI
+GoogleAuthAdapter --> GoogleOAuthAPI
+
+@enduml
