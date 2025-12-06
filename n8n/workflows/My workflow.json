@@ -62,10 +62,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -1808,
-        -448
+        -96,
+        96
       ],
-      "id": "9b69e392-d788-45b4-82a9-36fbe0d5d9d4",
+      "id": "79af0186-0b84-43ea-bd52-d70be0b9f69f",
       "name": "Check Validity"
     },
     {
@@ -227,10 +227,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -1520,
-        -560
+        192,
+        -16
       ],
-      "id": "da95476e-bb05-4c96-99ea-a7254178ee89",
+      "id": "ae06204f-5f32-4a20-99c6-1151a304ba0f",
       "name": "Action Router"
     },
     {
@@ -242,15 +242,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -752,
-        -192
+        960,
+        352
       ],
-      "id": "8aa19af0-e85e-445c-8647-b0f544ddf64e",
+      "id": "37548012-ee9c-4a1f-9cc8-c4650d79c1c4",
       "name": "Send a text message3",
       "webhookId": "e2e1c624-1311-4d2a-8f95-7f91272bbdee",
       "credentials": {
         "telegramApi": {
-          "id": "UUCrTO2Tc6O1jWnx",
+          "id": "XUhf7DpMbFlYJJFz",
           "name": "Telegram account"
         }
       }
@@ -264,15 +264,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -960,
-        -592
+        752,
+        -48
       ],
-      "id": "b1d65ff5-39ec-4b7c-8ace-89151a85cb19",
+      "id": "f41d8641-ac4e-467e-a7b5-7a6f92ca58c4",
       "name": "Send a text message5",
       "webhookId": "98536582-1105-4149-9a17-c5147f24d263",
       "credentials": {
         "telegramApi": {
-          "id": "UUCrTO2Tc6O1jWnx",
+          "id": "XUhf7DpMbFlYJJFz",
           "name": "Telegram account"
         }
       }
@@ -286,15 +286,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -960,
-        -400
+        752,
+        144
       ],
-      "id": "0bd09449-eef5-4f25-a53f-6041171d8f66",
+      "id": "806edb9e-db67-4334-a89c-6a2ff4f7597f",
       "name": "Send a text message6",
       "webhookId": "98536582-1105-4149-9a17-c5147f24d263",
       "credentials": {
         "telegramApi": {
-          "id": "UUCrTO2Tc6O1jWnx",
+          "id": "XUhf7DpMbFlYJJFz",
           "name": "Telegram account"
         }
       }
@@ -309,15 +309,15 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
       "position": [
-        -2672,
-        -432
+        -960,
+        112
       ],
-      "id": "9d746423-5408-40c7-bfae-67366a3b8e5e",
+      "id": "037af27c-3986-4401-91a5-77cb4af64488",
       "name": "Mensaje del usuario",
       "webhookId": "d03751f7-9d80-4ba3-8024-8fa2c725f177",
       "credentials": {
         "telegramApi": {
-          "id": "UUCrTO2Tc6O1jWnx",
+          "id": "XUhf7DpMbFlYJJFz",
           "name": "Telegram account"
         }
       }
@@ -332,14 +332,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -2432,
-        -432
+        -720,
+        112
       ],
-      "id": "21ef2c7a-aebd-49e3-b59e-9479b6ae917c",
+      "id": "2a00fe52-5fa2-4a84-801d-6f003a0e630a",
       "name": "Verificar en BD status de autenticacion",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "1jRX0rfMbCAGwf6v",
+          "id": "kD67zWQcLpvywNGg",
           "name": "Header Auth account"
         }
       }
@@ -351,10 +351,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -2208,
-        -32
+        -496,
+        512
       ],
-      "id": "f82a54e4-82da-4893-85f9-83ac6b7114bf",
+      "id": "96357a42-dc43-4505-b867-195355c287e5",
       "name": "Sticky Note"
     },
     {
@@ -367,14 +367,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -2224,
-        -208
+        -512,
+        336
       ],
-      "id": "981802cf-2296-4920-9371-23607dc4331c",
+      "id": "e89b0f72-a856-4efb-9e78-3c6a8d86edd8",
       "name": "Autenticar usuario",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "1jRX0rfMbCAGwf6v",
+          "id": "kD67zWQcLpvywNGg",
           "name": "Header Auth account"
         }
       }
@@ -393,14 +393,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1168,
-        -800
+        544,
+        -256
       ],
-      "id": "8f9567b8-eb91-4da6-97ec-14720f9cb9d1",
+      "id": "032f0323-3787-44c5-bdb4-fece9cfb99c4",
       "name": "Crear evento en calendario",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "1jRX0rfMbCAGwf6v",
+          "id": "kD67zWQcLpvywNGg",
           "name": "Header Auth account"
         }
       },
@@ -434,10 +434,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -2224,
-        -432
+        -512,
+        112
       ],
-      "id": "ada229ba-d3f6-4ddd-8543-bc259291206d",
+      "id": "3f74b183-884b-46fe-8e61-7f4adb300da8",
       "name": "autenticado?"
     },
     {
@@ -454,14 +454,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1168,
-        -592
+        544,
+        -48
       ],
-      "id": "f86df25f-898b-45d7-9d9c-be954e4b6733",
+      "id": "2b2024d5-42fe-4fa8-9a6c-31c5c8bfe55e",
       "name": "Editar evento",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "1jRX0rfMbCAGwf6v",
+          "id": "kD67zWQcLpvywNGg",
           "name": "Header Auth account"
         }
       }
@@ -480,14 +480,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1168,
-        -400
+        544,
+        144
       ],
-      "id": "8dab939e-d9b4-4b2e-84cd-f81707734313",
+      "id": "bc11c921-000e-4946-8132-02380ce9e311",
       "name": "Eliminar evento",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "1jRX0rfMbCAGwf6v",
+          "id": "kD67zWQcLpvywNGg",
           "name": "Header Auth account"
         }
       }
@@ -519,14 +519,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1168,
-        -192
+        544,
+        352
       ],
-      "id": "5b01f08d-937a-4418-8ccf-0714a4cc315e",
+      "id": "c7ad82f8-a8d8-4716-8ebf-e3211b971c6f",
       "name": "Mostrar eventos",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "1jRX0rfMbCAGwf6v",
+          "id": "kD67zWQcLpvywNGg",
           "name": "Header Auth account"
         }
       }
@@ -540,15 +540,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -960,
-        -800
+        752,
+        -256
       ],
-      "id": "53bbcbbd-be1e-4864-90a9-9c0afe6c3ad0",
+      "id": "b26f9205-3bf0-4db5-9ff1-986d1c68d856",
       "name": "Mensaje de creacion exitosa",
       "webhookId": "98536582-1105-4149-9a17-c5147f24d263",
       "credentials": {
         "telegramApi": {
-          "id": "UUCrTO2Tc6O1jWnx",
+          "id": "XUhf7DpMbFlYJJFz",
           "name": "Telegram account"
         }
       }
@@ -562,15 +562,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -1600,
-        -160
+        112,
+        384
       ],
-      "id": "bb4b2a91-11e9-46e6-ad27-b2a1f59217fd",
+      "id": "0d62af44-f9fe-42b6-a481-cc5d852a6e2e",
       "name": "Enviar mensaje de error",
       "webhookId": "43d94a43-ff05-404c-892d-b908dbfedf33",
       "credentials": {
         "telegramApi": {
-          "id": "UUCrTO2Tc6O1jWnx",
+          "id": "XUhf7DpMbFlYJJFz",
           "name": "Telegram account"
         }
       }
@@ -584,15 +584,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -1168,
-        16
+        544,
+        560
       ],
-      "id": "a497d5d7-029c-46f2-ba26-a44de752efbc",
+      "id": "8bc19c89-6149-420b-b921-a9e82548a9d1",
       "name": "Mensaje de bienvenida",
       "webhookId": "e560c001-80d0-4c17-b8da-8e003a1bedbd",
       "credentials": {
         "telegramApi": {
-          "id": "UUCrTO2Tc6O1jWnx",
+          "id": "XUhf7DpMbFlYJJFz",
           "name": "Telegram account"
         }
       }
@@ -606,15 +606,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -1168,
-        224
+        544,
+        768
       ],
-      "id": "6b37f138-20ef-4e29-b7ae-0a9cd6819ddc",
+      "id": "10b3a424-433e-4d68-a6dc-9710f6a5187b",
       "name": "Mensaje de ayuda",
       "webhookId": "e560c001-80d0-4c17-b8da-8e003a1bedbd",
       "credentials": {
         "telegramApi": {
-          "id": "UUCrTO2Tc6O1jWnx",
+          "id": "XUhf7DpMbFlYJJFz",
           "name": "Telegram account"
         }
       }
@@ -626,10 +626,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2016,
-        -448
+        -304,
+        96
       ],
-      "id": "91f33067-26e7-4702-891b-522174d42b7a",
+      "id": "547d65a3-1cd8-4e23-a869-a0cff893b1d0",
       "name": "Main code"
     },
     {
@@ -658,15 +658,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -2016,
-        -208
+        -304,
+        336
       ],
-      "id": "2f9075eb-1ebf-46b8-9e16-3c7474293ee3",
+      "id": "2821f000-836b-4ed8-8470-b1fd41086a9c",
       "name": "Send a text message1",
       "webhookId": "d62f4c99-4e71-4316-9eba-9f27368b5c2f",
       "credentials": {
         "telegramApi": {
-          "id": "UUCrTO2Tc6O1jWnx",
+          "id": "XUhf7DpMbFlYJJFz",
           "name": "Telegram account"
         }
       }
@@ -678,10 +678,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -960,
-        -192
+        752,
+        352
       ],
-      "id": "c876f547-2795-4b2d-83de-6d5fb08b90d9",
+      "id": "1bee6236-ae9d-4891-90df-1798cfed4196",
       "name": "Parsear fechas para get"
     }
   ],
@@ -869,15 +869,15 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "ad8e6934-28a3-4451-8113-f4d95f52db12",
+  "versionId": "1f524713-4c5f-43ff-927b-607c92c8913d",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "76d9808489edd3d50fd6eee29d8b2f48e9b23f440d9e4c65533499154273a193"
+    "instanceId": "f21631604bf1df349c9da1efdc0d69d42809c5e513ee12d92b1db9a118e0c25d"
   },
-  "id": "8Q29soUfHVpL0sQE",
+  "id": "NUDUwg79M5D6GC0n",
   "tags": []
 }
