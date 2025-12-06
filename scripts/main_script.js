@@ -10,14 +10,14 @@ function parseSpanishDate(text) {
     const lowerText = text.toLowerCase().trim();
     const now = new Date(); 
     
-    // Configuracion timezone mexico
+    // Configuración Timezone México
     const offsetMexico = -6 * 60; 
     const nowMexico = new Date(now.getTime() + (offsetMexico * 60 * 1000));
 
     let year, monthIdx, day, hour, minute;
     let yearExplicitlyProvided = false;
 
-    // helper para hora flexible
+    // --- HELPER: Regex Super Flexible para Hora ---
     const extractTime = (str, defaultHour) => {
         // Busca hora tipo: 2:00pm, 2pm, 14:00, 9 am
         const timeRegex = /(\d{1,2})(?:[:\.](\d{2}))?\s*([ap]\.?m\.?)?/i;

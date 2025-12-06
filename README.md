@@ -48,7 +48,7 @@ El bot utiliza procesamiento de lenguaje natural. Los comandos empiezan con `/` 
 ### 3. 🗑️ Cancelar Eventos (`/cancelar`)
 * **Comando:** `/cancelar Título del Evento` (Requiere coincidencia exacta).
 
-### 4. 🗓️ Consultar Agenda (`/checar`)
+### 4. 🗓️ Consultar Agenda (`/checar`) cantidad | formato (dia, semana o mes)
 * **Tiempo Real:** `/checar hoy` (Muestra solo eventos pendientes del día).
 * **Día Completo:** `/checar mañana`.
 * **Rangos:** `/checar 1 semana`, `/checar 3 dias`, `/checar 1 mes`.
