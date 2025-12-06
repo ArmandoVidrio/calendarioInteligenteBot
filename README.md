@@ -57,6 +57,7 @@ El bot utiliza procesamiento de lenguaje natural. Los comandos empiezan con `/` 
 * **Inicio:** `/start` (Bienvenida y verificación de cuenta).
 * **Ayuda:** `/help` (Manual de sintaxis).
 
+> **Nota:** Para consultar mas información de los comandos consultar la [Guia de comandos](./guia_de_comandos.md)
 ---
 
 ## 3. Alcance del Proyecto
