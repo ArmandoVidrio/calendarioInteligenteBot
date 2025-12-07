@@ -1,5 +1,9 @@
 # 📅 Asistente Inteligente de Calendario (Telegram Bot + Google Calendar)
 
+NOMBRE DEL BOT:
+`@calendarioInteligenteDS_bot` o buscar `calendarioInteligente`
+<img width="419" height="124" alt="image" src="https://github.com/user-attachments/assets/5e65989d-8272-4b09-bb5c-c9917263d080" />
+
 ## 1. Introducción
 
 ### 1.1 Descripción General del Sistema
